@@ -11,6 +11,7 @@ from app.core.database import Base
 # Here for the file to run, so that the table users gets added to the list (the list of tables that Base.metadata has).
 # Without it Alembic doesn't know the table exists
 import app.features.users.models #noqa: F401
+import app.features.tasks.models #noqa: F401
 # "noqa: F401" tells code checking tools "unused on purpose"
 
 # this is the Alembic Config object, which provides
