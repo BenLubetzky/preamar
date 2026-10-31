@@ -1,10 +1,16 @@
 # The FastAPI app: creates it and plugs in each feature's routes.
 # Run with uvicorn app.main:app --reload (from the backend folder)
 
-from fastapi import FastAPI
+import uuid
+from fastapi import FastAPI, Depends
+from app.core.auth import get_current_user_id
 
 app = FastAPI(title="Preamar")
 
 @app.get("/health")
 def health():
     return {"status" : "ok"}
+
+@app.get("/me")
+def me(user_id:uuid.UUID = Depends(get_current_user_id)):
+    return {"user_id": user_id}
