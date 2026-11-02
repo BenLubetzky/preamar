@@ -1,8 +1,24 @@
-# Shared database setup: the Base class every model inherits from.
-# Also declared Supabase's auth.users so our tables can link to it.
+# Shared database setup: the connection, a session per request, and the Base class every model inherits from.
+# The connection address comes from the DATABASEURL in .env (the same one that Alembic uses).
 
-from sqlalchemy import Column, Table, Uuid
-from sqlalchemy.orm import DeclarativeBase
+import os
+
+from dotenv import load_dotenv
+from sqlalchemy import Column, Table, Uuid, create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+load_dotenv()
+
+# The engine holds the connection to Supabase. It's made once when the app starts and resused for every request.
+# SQLAlchemy handles connection pooling automatically.
+engine = create_engine(os.environ["DATABASE_URL"])
+
+SessionLocal = sessionmaker(engine, )
+
+def get_db():
+    """Get a database session for the current request."""
+    with SessionLocal() as session:
+        yield session
 
 class Base(DeclarativeBase):
     pass

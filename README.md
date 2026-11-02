@@ -13,9 +13,9 @@ You tell the app how much free time you have, and it tells you which of your tas
 
 Discussed one at a time, in this order:
 
-1. **Database:** decided. `users` (id, username, created_at) and `tasks` (id, user_id, title, description, duration_minutes, done_at, created_at). RLS on both.
+1. **Database:** decided. `users` (id, username, created_at) and `tasks` (id, user_id, title, description, duration_minutes, done_at, created_at). RLS on both. A database trigger adds the `users` row when someone signs up (the username comes from the signup).
 2. **Recommendation rule:** decided. From the unfinished tasks, pick the combination that uses the most of the free time without going over. If several combinations tie, pick the one that holds the oldest task (and among tasks with the same duration, the older one goes first).
-3. **Structure and names:** folder layout and naming, frontend and backend.
+3. **Structure and names:** backend decided. Each feature is a folder in `app/features/` with `models.py` (the table), `schemas.py` (the data shapes) and `router.py` (the endpoints). Shared code lives in `app/core/`. Frontend still open.
 
 ## Later
 

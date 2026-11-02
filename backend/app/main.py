@@ -5,7 +5,11 @@ import uuid
 from fastapi import FastAPI, Depends
 from app.core.auth import get_current_user_id
 
+from app.features.tasks.router import router as tasks_router
+
 app = FastAPI(title="Preamar")
+
+app.include_router(tasks_router)
 
 @app.get("/health")
 def health():
