@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.features.tasks.models import Task
-from app.features.tasks.schemas import TaskRead
+from app.features.tasks.schemas import TaskRead, TaskCreate
 
 # Every route in this file starts with /tasks. tag groups them under "tasks" on the docs page.
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -25,3 +25,17 @@ def list_tasks(
     tasks = db.scalars(query).all()
 
     return [TaskRead.model_validate(task) for task in tasks]
+
+# status_code=201 tells FastAPI to send 201 ("created") instead of 200 whenever the function is successfully done
+@router.post("", status_code=201)
+def create_task(
+    task_in: TaskCreate,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> TaskRead:
+    """Create a task for the logged-in user"""
+    task = Task(**task_in.model_dump(), user_id=user_id)
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return TaskRead.model_validate(task)

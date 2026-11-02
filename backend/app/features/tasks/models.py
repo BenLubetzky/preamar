@@ -8,6 +8,7 @@ from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+import app.features.users.models # noqa: F401
 
 class Task(Base):
     __tablename__ = "tasks"
