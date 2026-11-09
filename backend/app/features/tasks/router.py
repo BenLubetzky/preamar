@@ -3,14 +3,14 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.features.tasks.models import Task
-from app.features.tasks.schemas import TaskRead, TaskCreate
+from app.features.tasks.schemas import TaskRead, TaskCreate, TaskUpdate
 
 # Every route in this file starts with /tasks. tag groups them under "tasks" on the docs page.
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -36,6 +36,31 @@ def create_task(
     """Create a task for the logged-in user"""
     task = Task(**task_in.model_dump(), user_id=user_id)
     db.add(task)
+    db.commit()
+    db.refresh(task)
+    return TaskRead.model_validate(task)
+
+# Helper function
+def get_own_task(task_id:uuid.UUID, user_id:uuid.UUID, db:Session) -> Task:
+    """Return the task if it exists and belongs to the user, else raise 404"""
+    task = db.get(Task, task_id)
+    if task is None or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+# PATCH VS PUT: PATCH cchanges part of a resource, PUT replaces all of it. Since we change
+# only what's sent we're using PATCH
+@router.patch("/{task_id}")
+def update_task(
+    task_id: uuid.UUID,
+    task_in: TaskUpdate,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+) -> TaskRead:
+    """Change the sent fields of one of the logged in user's tasks"""
+    task = get_own_task(task_id, user_id, db)
+    for field, value in task_in.model_dump(exclude_unset=True).items():
+        setattr(task, field, value)
     db.commit()
     db.refresh(task)
     return TaskRead.model_validate(task)

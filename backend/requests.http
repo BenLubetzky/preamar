@@ -1,0 +1,16 @@
+# hand written requests for testing, sent with the REST Client extension
+# Click "send request" above a request to run it. requests are separated by ###
+
+@supabaseUrl = https://iagpigxbsokivxlkziya.supabase.co
+@apikey = sb_publishable_jbALnW2RWMgQEjNEojuTJw_wkaAkXzc
+
+### Sign up a test user
+POST {{supabaseUrl}}/auth/v1/signup
+apikey: {{apikey}}
+Content-Type: application/json
+
+{
+  "email": "benben@example.com",
+  "password": "test-password-123",
+  "data": { "username": "benben" }
+}

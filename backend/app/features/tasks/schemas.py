@@ -28,3 +28,9 @@ class TaskRead(BaseModel):
     duration_minutes: int
     done_at: datetime | None
     created_at: datetime
+
+
+class TaskUpdate(BaseModel):
+    title: str = Field(default=None, min_length=1)
+    description: str | None = None
+    duration_minutes: int = Field(default=None, gt=0)
