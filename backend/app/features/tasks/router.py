@@ -62,5 +62,18 @@ def update_task(
     for field, value in task_in.model_dump(exclude_unset=True).items():
         setattr(task, field, value)
     db.commit()
+    # db.refresh reloads the row from the database into the Python object
     db.refresh(task)
     return TaskRead.model_validate(task)
+
+# status code 204 is the usual success code for a delete
+@router.delete("/{task_id}", status_code=204)
+def delete_task(
+    task_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+) -> None:
+    """Delete one of the logged in user's tasks"""
+    task = get_own_task(task_id, user_id, db)
+    db.delete(task)
+    db.commit()
