@@ -10,7 +10,7 @@ apikey: {{apikey}}
 Content-Type: application/json
 
 {
-  "email": "benben2@example.com",
+  "email": "benben3@example.com",
   "password": "test-password-123",
-  "data": { "username": "benben2" }
+  "data": { "username": "benben3" }
 }

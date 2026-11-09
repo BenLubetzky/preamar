@@ -4,7 +4,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,9 +12,11 @@ from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.features.tasks.models import Task
 from app.features.tasks.schemas import TaskRead, TaskCreate, TaskUpdate
+from app.features.tasks.recommend import recommend
 
 # Every route in this file starts with /tasks. tag groups them under "tasks" on the docs page.
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+
 
 @router.get("")
 def list_tasks(
@@ -26,6 +28,7 @@ def list_tasks(
     tasks = db.scalars(query).all()
 
     return [TaskRead.model_validate(task) for task in tasks]
+
 
 # status_code=201 tells FastAPI to send 201 ("created") instead of 200 whenever the function is successfully done
 @router.post("", status_code=201)
@@ -40,6 +43,7 @@ def create_task(
     db.commit()
     db.refresh(task)
     return TaskRead.model_validate(task)
+
 
 # Helper function
 def get_own_task(task_id:uuid.UUID, user_id:uuid.UUID, db:Session) -> Task:
@@ -67,6 +71,7 @@ def update_task(
     db.refresh(task)
     return TaskRead.model_validate(task)
 
+
 # status code 204 is the usual success code for a delete
 @router.delete("/{task_id}", status_code=204)
 def delete_task(
@@ -78,6 +83,7 @@ def delete_task(
     task = get_own_task(task_id, user_id, db)
     db.delete(task)
     db.commit()
+
 
 @router.post("/{task_id}/done")
 def mark_task_done(
@@ -94,6 +100,7 @@ def mark_task_done(
         db.refresh(task)
     return TaskRead.model_validate(task)
 
+
 @router.post("/{task_id}/undone")
 def mark_task_undone(
     task_id: uuid.UUID,
@@ -106,3 +113,16 @@ def mark_task_undone(
     db.commit()
     db.refresh(task)
     return TaskRead.model_validate(task)
+
+
+@router.get("/recommend")
+def recommend_tasks(
+    minutes: int = Query(gt=0),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+) -> list[TaskRead]:
+    """Recommend which of the logged in user's unfinished tasks to do in the given free time"""
+    query = select(Task).where(Task.user_id == user_id, Task.done_at.is_(None))
+    tasks = db.scalars(query).all()
+    chosen = recommend(list(tasks), minutes)
+    return [TaskRead.model_validate(task) for task in chosen]
