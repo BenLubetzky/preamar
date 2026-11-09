@@ -2,6 +2,7 @@
 # The user comes from the token (core/auth.py); The tasks come from the tasks table through a session (core/database.py)
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -77,3 +78,31 @@ def delete_task(
     task = get_own_task(task_id, user_id, db)
     db.delete(task)
     db.commit()
+
+@router.post("/{task_id}/done")
+def mark_task_done(
+    task_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+) -> TaskRead:
+    """Mark one of the logged in user's tasks as done"""
+    task = get_own_task(task_id, user_id, db)
+    # In case there is already a done time, keep it
+    if task.done_at is None:
+        task.done_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(task)
+    return TaskRead.model_validate(task)
+
+@router.post("/{task_id}/undone")
+def mark_task_undone(
+    task_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+) -> TaskRead:
+    """Mark one of the logged in user's tasks as not done"""
+    task = get_own_task(task_id, user_id, db)
+    task.done_at = None
+    db.commit()
+    db.refresh(task)
+    return TaskRead.model_validate(task)
