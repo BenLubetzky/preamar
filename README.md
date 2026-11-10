@@ -15,7 +15,9 @@ Discussed one at a time, in this order:
 
 1. **Database:** decided. `users` (id, username, created_at) and `tasks` (id, user_id, title, description, duration_minutes, done_at, created_at). RLS on both. A database trigger adds the `users` row when someone signs up (the username comes from the signup).
 2. **Recommendation rule:** decided. From the unfinished tasks, pick the combination that uses the most of the free time without going over. If several combinations tie, pick the one that holds the oldest task (and among tasks with the same duration, the older one goes first).
-3. **Structure and names:** backend decided. Each feature is a folder in `app/features/` with `models.py` (the table), `schemas.py` (the data shapes) and `router.py` (the endpoints). Shared code lives in `app/core/`. Frontend still open.
+3. **Structure and names:** decided.
+   - **Backend:** each feature is a folder in `app/features/` with `models.py` (the table), `schemas.py` (the data shapes) and `router.py` (the endpoints). Shared code lives in `app/core/`.
+   - **Frontend (TypeScript):** `src/app/` holds only routes: `/` (task list + free time), `/login`, `/signup`. Each feature is a folder in `src/features/` with `api.ts` (calls to the backend), `hooks.ts` (TanStack Query hooks), `types.ts` (the data shapes) and `components/`. The recommendation lives inside `tasks/`. Shared code lives in `src/core/`: the one API client, the Supabase connection, the auth context (`useAuth()`) and the TanStack Query setup. Components never call `fetch` directly: component → hook → `api.ts` → API client.
 
 ## Later
 
