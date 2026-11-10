@@ -2,13 +2,17 @@
 // It only arranges feature components on the page; it fetches no data itself.
 
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { LogoutButton } from "@/features/auth/components/LogoutButton";
 
 /** Shows the home page. */
 export default function Home() {
   return (
     <RequireAuth>
       <main className="mx-auto max-w-2xl p-8">
-        <h1 className="text-2xl font-semibold">Preamar</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Preamar</h1>
+          <LogoutButton />
+        </div>
       </main>
     </RequireAuth>
   );
