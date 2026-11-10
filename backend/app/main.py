@@ -3,11 +3,20 @@
 
 import uuid
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import get_current_user_id
 
 from app.features.tasks.router import router as tasks_router
 
 app = FastAPI(title="Preamar")
+
+# Lets the Next.js frontend (another address) call this API from the browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(tasks_router)
 
