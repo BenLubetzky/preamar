@@ -4,6 +4,7 @@
 
 import { useTasks } from "../hooks";
 import { DeleteTaskButton } from "./DeleteTaskButton";
+import { TaskDoneCheckbox } from "./TaskDoneCheckbox";
 
 /** Shows each task's title, description and duration. */
 export function TaskList() {
@@ -18,7 +19,12 @@ export function TaskList() {
       {tasks.map((task) => (
         <li key={task.id} className="rounded border p-3">
           <div className="flex justify-between">
-            <span className="font-medium">{task.title}</span>
+            <div className="flex items-center gap-2">
+              <TaskDoneCheckbox task={task} />
+              <span className={`font-medium ${task.done_at ? "line-through text-gray-400" : ""}`}>
+                {task.title}
+              </span>
+            </div>
             <div className="flex gap-3">
               <span>{task.duration_minutes} min</span>
               <DeleteTaskButton taskId={task.id} />

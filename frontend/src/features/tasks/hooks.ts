@@ -2,7 +2,7 @@
 // The data lives in the shared query cache (src/core/query-provider.tsx) under the "tasks" key
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTask, getTasks, deleteTask } from "./api";
+import { createTask, getTasks, deleteTask, markTaskDone, markTaskUndone } from "./api";
 
 
 /** The cache key for the task list, shared by every hook that reads or refreshes it. */
@@ -25,7 +25,7 @@ export function useCreateTask() {
     // useQuery is for reading.
     return useMutation({
         mutationFn: createTask,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     })
 }
 
@@ -39,4 +39,15 @@ export function useDeleteTask() {
         mutationFn: deleteTask,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     });
+}
+
+
+/** Marks a task done or not done, then refreshes the task list. */
+export function useSetTaskDone() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, done }: { id:string, done:boolean}) => 
+            done ? markTaskDone(id) : markTaskUndone(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY}),
+    })
 }
