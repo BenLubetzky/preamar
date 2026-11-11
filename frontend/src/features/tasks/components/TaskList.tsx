@@ -34,7 +34,7 @@ export function TaskList() {
                 </span>
               </div>
               <div className="flex gap-3">
-                <span>{task.duration_minutes} min</span>
+                <span> {task.duration_minutes} min</span>
                 <button type="button" onClick={() => setEditingId(task.id)} className="text-sm">
                   Edit
                 </button>

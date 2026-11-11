@@ -2,7 +2,7 @@
 // The data lives in the shared query cache (src/core/query-provider.tsx) under the "tasks" key
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTask, getTasks, deleteTask, markTaskDone, markTaskUndone, updateTask } from "./api";
+import { createTask, getTasks, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation } from "./api";
 import type { TaskUpdate } from "./types";
 
 
@@ -61,4 +61,15 @@ export function useUpdateTask() {
         mutationFn: ({ id, changes }: { id: string; changes: TaskUpdate }) => updateTask(id, changes),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY}),
     });
+}
+
+
+/** Gets the tasks recommended for the given free minutes; does nothing while minutes is null. */
+export function useRecommendation(minutes: number | null) {
+    // enabled says whether it's allowed to run.
+    return useQuery({
+        queryKey: [...TASKS_KEY, "recommend", minutes],
+        queryFn: () => getRecommendation(minutes!),
+        enabled: minutes !== null,
+    })
 }
