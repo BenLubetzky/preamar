@@ -3,6 +3,7 @@
 
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
+import { TaskList } from "@/features/tasks/components/TaskList";
 
 /** Shows the home page. */
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
           <h1 className="text-2xl font-semibold">Preamar</h1>
           <LogoutButton />
         </div>
+        <TaskList />
       </main>
     </RequireAuth>
   );
