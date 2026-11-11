@@ -2,7 +2,7 @@
 // The data lives in the shared query cache (src/core/query-provider.tsx) under the "tasks" key
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTask, getTasks } from "./api";
+import { createTask, getTasks, deleteTask } from "./api";
 
 
 /** The cache key for the task list, shared by every hook that reads or refreshes it. */
@@ -27,4 +27,16 @@ export function useCreateTask() {
         mutationFn: createTask,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY })
     })
+}
+
+
+/** Deletes a task, then refreshes the task list. */
+export function useDeleteTask() {
+    const queryClient = useQueryClient();
+    // queryClient.invalidateQueries tells the cache that the data under a key is out of date.
+    // If a component on screen is using that key, TanStack Query fetches it from the backend again right away.
+    return useMutation({
+        mutationFn: deleteTask,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+    });
 }

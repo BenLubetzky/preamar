@@ -3,6 +3,7 @@
 "use client";
 
 import { useTasks } from "../hooks";
+import { DeleteTaskButton } from "./DeleteTaskButton";
 
 /** Shows each task's title, description and duration. */
 export function TaskList() {
@@ -18,7 +19,10 @@ export function TaskList() {
         <li key={task.id} className="rounded border p-3">
           <div className="flex justify-between">
             <span className="font-medium">{task.title}</span>
-            <span>{task.duration_minutes} min</span>
+            <div className="flex gap-3">
+              <span>{task.duration_minutes} min</span>
+              <DeleteTaskButton taskId={task.id} />
+            </div>
           </div>
           {task.description && <p className="text-sm text-gray-500">{task.description}</p>}
         </li>
