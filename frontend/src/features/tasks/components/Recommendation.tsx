@@ -5,6 +5,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRecommendation } from "../hooks";
+import { Countdown } from "./Countdown";
 
 /** Asks for the free minutes and shows the recommended tasks. */
 export function Recommendation(){
@@ -41,6 +42,9 @@ export function Recommendation(){
                         </li>
                     ))}
                 </ul>
+                {/* When you ask for a new recommendation with different minutes, the key changes
+                so React throws away the old Countdown and builds a fresh one. */}
+                <Countdown key={minutes} minutes={minutes} />
             </div>
         );
     }
