@@ -41,7 +41,9 @@ export function markTaskUndone(id: string) {
 }
 
 
-/** Gets the tasks recommended for the given free minutes */
-export function getRecommendation(minutes: number){
-    return apiFetch<Task[]>(`/tasks/recommend?minutes=${minutes}`);
+/** Gets the tasks recommended for the given free minutes, skipping tasks marked as skip */
+export function getRecommendation(minutes: number, skip: string[]){
+    const params = new URLSearchParams({ minutes: String(minutes) });
+    skip.forEach((id) => params.append("skip", id));
+    return apiFetch<Task[]>(`/tasks/recommend?${params}`);
 }

@@ -1,7 +1,7 @@
 "use client";
 
-// The free time box - the user types their free minutes and sees which tasks fit.
-// The answer comes from useRecommendation() is hooks.ts
+// The free time box - the user types their free minutes and sees which tasks fit, and can skip some.
+// The answer comes from useRecommendation() is hooks.ts; skipped ids live only in this component's state.
 
 import { useState, type FormEvent } from "react";
 import { useRecommendation } from "../hooks";
@@ -11,14 +11,20 @@ import { Countdown } from "./Countdown";
 export function Recommendation(){
     const [input, setInput] = useState("");
     const [minutes, setMinutes] = useState<number | null>(null);
+    const [skipped, setSkipped] = useState<string[]>([]);
     // Since minutes is in the queryKey, when minute changes the key changes to TanStack Query treats
     // it as different data and fetches automatically.
-    const {data: tasks, isPending, isError} = useRecommendation(minutes);
+    const {data: tasks, isPending, isError} = useRecommendation(minutes, skipped);
 
     /** Locks in the typed minutes, which stars the request */
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setMinutes(Number(input));
+    }
+
+    /** Adds a task to the skipped list so the next recommendation leaves it out. */
+    function skipTask(id: string) {
+        setSkipped([...skipped, id]);
     }
 
     /** Shows the answer, or nothing before the first request. */
@@ -39,6 +45,13 @@ export function Recommendation(){
                         <li key={task.id} className="flex justify-between">
                             <span>{task.title}</span>
                             <span>{task.duration_minutes} min</span>
+                            <button
+                                type="button"
+                                className="rounded border px-2 text-sm"
+                                onClick={() => skipTask(task.id)}
+                            >
+                                Skip
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -65,6 +78,15 @@ export function Recommendation(){
                     Recommend
                 </button>
             </form>
+            {skipped.length > 0 && (
+                <button
+                    type="button"
+                    className="rounded border px-2 text-sm"
+                    onClick={() => setSkipped([])}
+                >
+                    Refresh
+                </button>
+            )}
             <div className="mt-4">{renderResult()}</div>
         </section>
     );

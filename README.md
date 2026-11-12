@@ -9,6 +9,11 @@ You tell the app how much free time you have, and it tells you which of your tas
 - **Recommendation:** the app suggests which tasks fit into that time.
 - **Login:** each user sees only their own tasks.
 
+## After the MVP
+
+- **Countdown timer:** a timer for the free time, with Start and Pause.
+- **Skip a task:** leave a task out of the current recommendation without marking it done. Skips last until the Refresh button or a page reload.
+
 ## Open decisions
 
 Discussed one at a time, in this order:
@@ -21,6 +26,4 @@ Discussed one at a time, in this order:
 
 ## Later
 
-- Reading documents to create tasks from them.
-- A countdown timer for the free time.
 - Automatically delete tasks 24 hours after `done_at`.

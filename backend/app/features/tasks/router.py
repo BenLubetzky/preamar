@@ -118,11 +118,15 @@ def mark_task_undone(
 @router.get("/recommend")
 def recommend_tasks(
     minutes: int = Query(gt=0),
+    skip: list[uuid.UUID] = Query(default=[]),
     user_id: uuid.UUID = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ) -> list[TaskRead]:
-    """Recommend which of the logged in user's unfinished tasks to do in the given free time"""
-    query = select(Task).where(Task.user_id == user_id, Task.done_at.is_(None))
+    """Recommend which of the logged in user's unfinished tasks to do in the given free time,
+    leaving out the skipped ones."""
+    query = select(Task).where(Task.user_id == user_id, 
+                               Task.done_at.is_(None),
+                               Task.id.not_in(skip),)
     tasks = db.scalars(query).all()
     chosen = recommend(list(tasks), minutes)
     return [TaskRead.model_validate(task) for task in chosen]

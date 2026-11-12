@@ -1,7 +1,7 @@
 // TanStack Query hooks for tasks: components use these, never api.ts directly.
 // The data lives in the shared query cache (src/core/query-provider.tsx) under the "tasks" key
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createTask, getTasks, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation } from "./api";
 import type { TaskUpdate } from "./types";
 
@@ -65,11 +65,14 @@ export function useUpdateTask() {
 
 
 /** Gets the tasks recommended for the given free minutes; does nothing while minutes is null. */
-export function useRecommendation(minutes: number | null) {
+export function useRecommendation(minutes: number | null, skip: string[]) {
     // enabled says whether it's allowed to run.
+    // keepPreviousData makes it so that while the new list loads, the query
+    // keeps returning the old list instead of switching to pending.
     return useQuery({
-        queryKey: [...TASKS_KEY, "recommend", minutes],
-        queryFn: () => getRecommendation(minutes!),
+        queryKey: [...TASKS_KEY, "recommend", minutes, skip],
+        queryFn: () => getRecommendation(minutes!, skip),
         enabled: minutes !== null,
+        placeholderData: keepPreviousData,
     })
 }
