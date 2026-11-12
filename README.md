@@ -13,6 +13,7 @@ You tell the app how much free time you have, and it tells you which of your tas
 
 - **Countdown timer:** a timer for the free time, with Start and Pause.
 - **Skip a task:** leave a task out of the current recommendation without marking it done. Skips last until the Refresh button or a page reload.
+- **Auto-delete done tasks:** a pg_cron job in the database runs every hour and deletes tasks marked done more than 24 hours ago.
 
 ## Open decisions
 
@@ -26,4 +27,4 @@ Discussed one at a time, in this order:
 
 ## Later
 
-- Automatically delete tasks 24 hours after `done_at`.
+Nothing yet.
