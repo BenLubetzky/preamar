@@ -1,11 +1,9 @@
-// The "/" route: the main page, where the task list and free time will go.
+// The "/" route: the main page. ForestBackground as the background with HomeLayout on top, containing the 
+// recommend window (left), task list (center) and add task form (right).
 // It only arranges feature components on the page; it fetches no data itself.
 
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { LogoutButton } from "@/features/auth/components/LogoutButton";
-import { TaskList } from "@/features/tasks/components/TaskList";
-import { AddTaskForm } from "@/features/tasks/components/AddTaskForm";
-import { Recommendation } from "@/features/tasks/components/Recommendation";
+import { HomeLayout } from "@/features/tasks/components/HomeLayout";
 import { ForestBackground } from "@/features/scene/components/ForestBackground";
 
 /** Shows the home page. */
@@ -13,15 +11,7 @@ export default function Home() {
   return (
     <RequireAuth>
       <ForestBackground />
-      <main className="mx-auto max-w-2xl p-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Preamar</h1>
-          <LogoutButton />
-        </div>
-        <Recommendation />
-        <AddTaskForm/>
-        <TaskList />
-      </main>
+      <HomeLayout />
     </RequireAuth>
   );
 }
