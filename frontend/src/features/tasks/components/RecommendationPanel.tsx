@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useRecommendation } from "../hooks";
 import { Countdown } from "./Countdown";
+import type { Task } from "../types";
 
 type Props = {
     /** The free minutes the user submitted, or null before the first request. */
@@ -16,6 +17,7 @@ type Props = {
 export function RecommendationPanel({ minutes }: Props) {
     const [skipped, setSkipped] = useState<string[]>([]);
     const [openIds, setOpenIds] = useState<string[]>([]);
+    const [focusTasks, setFocusTasks] = useState<Task[] | null>(null);
     const { data: tasks, isPending, isError } = useRecommendation(minutes, skipped);
 
     /** Adds a task for the skipped list so the next recommendation leaves it out. */
@@ -26,6 +28,11 @@ export function RecommendationPanel({ minutes }: Props) {
     /** Opens or closes the description under one task */
     function toggleDescription(id: string) {
         setOpenIds(openIds.includes(id) ? openIds.filter((x) => x!== id) : [...openIds, id]);
+    }
+
+    /** On the first Start, freezes the current list of tasks. */
+    function startFocus() {
+        if (focusTasks === null && tasks) setFocusTasks(tasks);
     }
 
     if (minutes == null) return null;
@@ -94,7 +101,7 @@ export function RecommendationPanel({ minutes }: Props) {
                     style={{ width: `${Math.min(100, Math.round((total / minutes) * 100))}%` }}
                 />
             </div>
-            <Countdown key={minutes} minutes={minutes}/>
+            <Countdown key={minutes} minutes={minutes} onStart={startFocus}/>
         </div>
     );
 }

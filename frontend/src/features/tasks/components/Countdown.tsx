@@ -1,7 +1,7 @@
 "use client";
 
 // A countdown for the free time - starts on "Start", can pause, stop at 0.
-// The minutes come from Recommendation.tsx; nothing here talks to the backend
+// The minutes come from RecommendationPanel.tsx; nothing here talks to the backend
 
 import { useEffect, useState } from "react";
 
@@ -11,8 +11,15 @@ function formatTime(totalSeconds: number) {
     return `${minutes}:${seconds}`;
 }
 
-/** Counts downt he given minutes once the user presses Start. */
-export function Countdown({ minutes }: { minutes: number }) {
+type Props = {
+    /** Minutes to count down */
+    minutes: number,
+    /** Function from the parent to see if start was pressed */
+    onStart: () => void,
+}
+
+/** Counts down the given minutes once the user presses Start. */
+export function Countdown({ minutes, onStart }: Props) {
     const [secondsLeft, setSecondsLeft] =  useState(minutes * 60);
     const [running, setRunning] = useState(false);
     const finished = secondsLeft === 0;
@@ -36,7 +43,10 @@ export function Countdown({ minutes }: { minutes: number }) {
                 <button
                     type="button"
                     className="btn h-7 px-3"
-                    onClick={() => setRunning(!running)}
+                    onClick={() => {
+                        if (!running) onStart?.();
+                        setRunning(!running);
+                    }}
                 >
                     {running ? "Pause" : "Start"}
                 </button>
