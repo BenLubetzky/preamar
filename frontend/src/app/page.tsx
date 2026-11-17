@@ -6,11 +6,13 @@ import { LogoutButton } from "@/features/auth/components/LogoutButton";
 import { TaskList } from "@/features/tasks/components/TaskList";
 import { AddTaskForm } from "@/features/tasks/components/AddTaskForm";
 import { Recommendation } from "@/features/tasks/components/Recommendation";
+import { ForestBackground } from "@/features/scene/components/ForestBackground";
 
 /** Shows the home page. */
 export default function Home() {
   return (
     <RequireAuth>
+      <ForestBackground />
       <main className="mx-auto max-w-2xl p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Preamar</h1>
