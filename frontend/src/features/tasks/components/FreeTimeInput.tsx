@@ -22,10 +22,10 @@ export function FreeTimeInput({ onSubmit }: Props) {
 
     return (
         <form onSubmit={handleSubmit}>
-            <p className="text-xl text-soft">Got free time?</p>
+            <p className="text-2xl text-soft">Got free time?</p>
             <div className="mt-1 flex items-center gap-2">
                 <input
-                    className="field h-6 w-9 text-center"
+                    className="field h-7 w-11 text-center"
                     type="number"
                     min={1}
                     value={input}
@@ -35,7 +35,7 @@ export function FreeTimeInput({ onSubmit }: Props) {
                 <span className="text-muted">min</span>
                 <button
                     type="submit"
-                    className="btn flex h-6 w-7 items-center justify-center"
+                    className="btn flex h-7 w-8 items-center justify-center"
                     title="What fits"
                     aria-label="What fits"
                 >
@@ -49,7 +49,7 @@ export function FreeTimeInput({ onSubmit }: Props) {
 /** A 7×7 pixel magnifying glass, drawn one square at a time (from the design file). */
 function MagnifierIcon() {
     return (
-        <svg width="14" height="14" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
             <rect x="1" y="0" width="3" height="1" fill="#F2C86A" />
             <rect x="0" y="1" width="1" height="3" fill="#F2C86A" />
             <rect x="4" y="1" width="1" height="3" fill="#F2C86A" />

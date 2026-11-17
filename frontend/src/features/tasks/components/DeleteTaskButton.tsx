@@ -15,7 +15,7 @@ export function DeleteTaskButton({ taskId }: { taskId: string }) {
             onClick={() => deleteTask.mutate(taskId)}
             disabled={deleteTask.isPending}
             aria-label="Delete task"
-            className="cursor-pointer text-dim hover:text-muted disabled:opacity-50"
+            className="flex size-8 cursor-pointer items-center justify-center text-2xl text-dim hover:bg-btn hover:text-muted disabled:opacity-50"
         >
             ×
         </button>

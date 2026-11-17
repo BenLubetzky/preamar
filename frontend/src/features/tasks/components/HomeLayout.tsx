@@ -18,18 +18,18 @@ export function HomeLayout() {
     const [showAdd, setShowAdd] = useState(false);
 
     return (
-      <div className="min-h-screen p-6 font-pixel text-lg text-ink">
-        <h1 className="text-3xl text-accent">preamar</h1>
+      <div className="min-h-screen p-6 font-pixel text-xl text-ink">
+        <h1 className="text-4xl text-accent">preamar</h1>
 
-        <div className="mt-6 grid grid-cols-[18rem_24rem_18rem] items-start justify-center gap-6">
+        <div className="mt-6 grid grid-cols-[19rem_26rem_19rem] items-start justify-center gap-6">
             {minutes != null ? (
                 <section className="panel">
-                    <div className="flex items-center justify-between text-[22px] text-accent">
+                    <div className="flex items-center justify-between text-2xl text-accent">
                         <h2>What fits</h2>
                         <button
                             type="button"
                             aria-label="Close"
-                            className="cursor-pointer text-lg text-dim hover:text-muted"
+                            className="cursor-pointer px-1 text-2xl text-dim hover:text-muted"
                             onClick={() => setMinutes(null)}
                         >
                             ×
@@ -48,15 +48,22 @@ export function HomeLayout() {
                 <FreeTimeInput onSubmit={setMinutes}/>
                 <div className="mt-3 mb-2 h-px bg-btn" />
                 <TaskList />
-                <button type="button" className="btn mt-3 h-9 w-full text-xl" onClick={() => setShowAdd(true)}>
+                <button type="button" className="btn mt-3 h-10 w-full text-2xl" onClick={() => setShowAdd(true)}>
                     + Add new task
                 </button>
             </section>
             { showAdd ? (
                 <section className="panel">
-                    <div className="flex justify-between">
+                    <div className="flex items-center justify-between text-2xl text-accent">
                         <h2>New task</h2>
-                        <button type="button" onClick={() => setShowAdd(false)}>x</button>
+                        <button
+                            type="button"
+                            aria-label="Close"
+                            className="cursor-pointer px-1 text-2xl text-dim hover:text-muted"
+                            onClick={() => setShowAdd(false)}
+                        >
+                            ×
+                        </button>
                     </div>
                     <AddTaskForm onClose={() => setShowAdd(false)} />
                 </section>

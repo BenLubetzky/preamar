@@ -25,8 +25,8 @@ export function TaskList() {
             <EditTaskForm task={task} onClose={() => setEditingId(null)} />
           </li>
         ) : (
-          <li key={task.id} className="px-1 py-0.5 leading-5">
-            <div className="flex items-center gap-2">
+          <li key={task.id} className="px-1 py-1 text-[22px] leading-6">
+            <div className="flex items-center gap-2.5">
               <TaskDoneCheckbox task={task} />
               <span className={`min-w-0 flex-1 truncate ${task.done_at ? "text-dim line-through" : ""}`}>
                 {task.title}
@@ -35,13 +35,13 @@ export function TaskList() {
               <button
                 type="button"
                 onClick={() => setEditingId(task.id)}
-                className="cursor-pointer text-base text-dim hover:text-muted"
+                className="flex h-8 cursor-pointer items-center px-2 text-lg text-dim hover:bg-btn hover:text-muted"
               >
                 edit
               </button>
               <DeleteTaskButton taskId={task.id} />
             </div>
-            {task.description && <p className="truncate pl-5 text-base text-dim">{task.description}</p>}
+            {task.description && <p className="truncate pl-6 text-lg text-dim">{task.description}</p>}
           </li>
         ),
       )}
