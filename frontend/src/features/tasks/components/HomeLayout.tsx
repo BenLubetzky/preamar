@@ -24,9 +24,16 @@ export function HomeLayout() {
         <div className="mt-6 grid grid-cols-[18rem_24rem_18rem] items-start justify-center gap-6">
             {minutes != null ? (
                 <section className="panel">
-                    <div className="flex justify-between">
+                    <div className="flex items-center justify-between text-[22px] text-accent">
                         <h2>What fits</h2>
-                        <button type="button" onClick={() => setMinutes(null)}>x</button>
+                        <button
+                            type="button"
+                            aria-label="Close"
+                            className="cursor-pointer text-lg text-dim hover:text-muted"
+                            onClick={() => setMinutes(null)}
+                        >
+                            ×
+                        </button>
                     </div>
                     <RecommendationPanel minutes={minutes}/>
                 </section>

@@ -28,14 +28,14 @@ export function Countdown({ minutes }: { minutes: number }) {
     }, [running, finished]);
 
     return (
-        <div className="mt-4 flex items-center gap-3">
-            <span className="font-mono text-2xl">{formatTime(secondsLeft)}</span>
+        <div className="mt-3 flex items-center gap-3">
+            <span className="text-3xl leading-none text-accent">{formatTime(secondsLeft)}</span>
             {finished ? (
-                <span>Time&apos;s up!</span>
+                <span className="text-soft">Time&apos;s up!</span>
             ) : (
-                <button 
+                <button
                     type="button"
-                    className="rounded border px-3 py-1"
+                    className="btn h-7 px-3"
                     onClick={() => setRunning(!running)}
                 >
                     {running ? "Pause" : "Start"}
