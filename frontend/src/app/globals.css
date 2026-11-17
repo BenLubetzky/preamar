@@ -50,3 +50,26 @@ body {
   outline-offset: -5px;
   padding: 14px 16px;
 }
+
+/* Amber-on-brown pixel button. */
+@utility btn {
+  background: var(--color-btn);
+  color: var(--color-accent);
+  border: 1px solid var(--color-btn-line);
+  cursor: pointer;
+  &:hover { background: var(--color-btn-hover); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+/* Dark text input with a brown border; number inputs lose their up/down arrows. */
+@utility field {
+  background: var(--color-field);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  outline: none;
+  appearance: textfield;
+  &:focus { border-color: var(--color-focus); }
+  &::placeholder { color: #5A4A34; }
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button { appearance: none; margin: 0; }
+}

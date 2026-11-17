@@ -21,20 +21,43 @@ export function FreeTimeInput({ onSubmit }: Props) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
-            <span>Got Free Time?</span>
-            <input 
-                className="w-16 border bg-transparent p-1"
-                type="number"
-                min={1}
-                value={input}
-                onChange={(e)=> setInput(e.target.value)}
-                required
-            />
-            <span>min</span>
-            <button type="submit" className="border px-2">
-                Recommend
-            </button>
+        <form onSubmit={handleSubmit}>
+            <p className="text-xl text-soft">Got free time?</p>
+            <div className="mt-1 flex items-center gap-2">
+                <input
+                    className="field h-6 w-9 text-center"
+                    type="number"
+                    min={1}
+                    value={input}
+                    onChange={(e)=> setInput(e.target.value)}
+                    required
+                />
+                <span className="text-muted">min</span>
+                <button
+                    type="submit"
+                    className="btn flex h-6 w-7 items-center justify-center"
+                    title="What fits"
+                    aria-label="What fits"
+                >
+                    <MagnifierIcon />
+                </button>
+            </div>
         </form>
+    );
+}
+
+/** A 7×7 pixel magnifying glass, drawn one square at a time (from the design file). */
+function MagnifierIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+            <rect x="1" y="0" width="3" height="1" fill="#F2C86A" />
+            <rect x="0" y="1" width="1" height="3" fill="#F2C86A" />
+            <rect x="4" y="1" width="1" height="3" fill="#F2C86A" />
+            <rect x="1" y="4" width="3" height="1" fill="#F2C86A" />
+            <rect x="4" y="4" width="1" height="1" fill="#F2C86A" />
+            <rect x="5" y="5" width="1" height="1" fill="#F2C86A" />
+            <rect x="6" y="6" width="1" height="1" fill="#F2C86A" />
+            <rect x="1" y="1" width="1" height="1" fill="#8A6A30" />
+        </svg>
     );
 }

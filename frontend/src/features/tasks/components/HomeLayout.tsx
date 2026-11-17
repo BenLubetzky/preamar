@@ -35,12 +35,13 @@ export function HomeLayout() {
             )}
 
             <section className="panel">
-                <div className="flex justify-end">
+                <div className="-mt-1 flex justify-end">
                     <LogoutButton />
                 </div>
                 <FreeTimeInput onSubmit={setMinutes}/>
+                <div className="mt-3 mb-2 h-px bg-btn" />
                 <TaskList />
-                <button type="button" className="mt-4 w-full border p-2" onClick={() => setShowAdd(true)}>
+                <button type="button" className="btn mt-3 h-9 w-full text-xl" onClick={() => setShowAdd(true)}>
                     + Add new task
                 </button>
             </section>

@@ -9,8 +9,8 @@ import { useAuth } from "@/core/auth-context";
 export function LogoutButton(){
     const { signOut } = useAuth();
     return (
-        <button onClick={signOut} className="rounded border px-3 py-1">
-            Log out
+        <button type="button" onClick={signOut} className="cursor-pointer text-base text-dim hover:text-muted">
+            log out
         </button>
     )
 }
