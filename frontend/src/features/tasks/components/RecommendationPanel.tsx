@@ -35,7 +35,7 @@ export function RecommendationPanel({ minutes }: Props) {
             </p>
             <ul className="space-y-0.5">
                 {tasks.map((task) => (
-                    <li key={task.id} className="flex items-center gap-2 py-0.5 leading-5">
+                    <li key={task.id} className="flex items-center gap-2 border border-focus px-1.5 py-0.5 leading-5">
                         <span className="text-accent">›</span>
                         <span className="min-w-0 flex-1 truncate">{task.title}</span>
                         <span className="text-muted">{task.duration_minutes}</span>
