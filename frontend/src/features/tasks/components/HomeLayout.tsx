@@ -35,7 +35,7 @@ export function HomeLayout() {
                             ×
                         </button>
                     </div>
-                    <RecommendationPanel minutes={minutes}/>
+                    <RecommendationPanel key={minutes} minutes={minutes}/>
                 </section>
             ) : (
                 <div />
