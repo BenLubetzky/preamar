@@ -15,11 +15,17 @@ type Props = {
 /** Shows the recomended tasks for the given amount of minutes. */
 export function RecommendationPanel({ minutes }: Props) {
     const [skipped, setSkipped] = useState<string[]>([]);
+    const [openIds, setOpenIds] = useState<string[]>([]);
     const { data: tasks, isPending, isError } = useRecommendation(minutes, skipped);
 
     /** Adds a task for the skipped list so the next recommendation leaves it out. */
     function skipTask(id: string) {
         setSkipped([...skipped, id]);
+    }
+
+    /** Opens or closes the description under one task */
+    function toggleDescription(id: string) {
+        setOpenIds(openIds.includes(id) ? openIds.filter((x) => x!== id) : [...openIds, id]);
     }
 
     if (minutes == null) return null;
@@ -34,20 +40,38 @@ export function RecommendationPanel({ minutes }: Props) {
                 {fitMessage(tasks.length, minutes)}
             </p>
             <ul className="space-y-0.5">
-                {tasks.map((task) => (
-                    <li key={task.id} className="flex items-center gap-2 border border-focus px-1.5 py-0.5 leading-5">
-                        <span className="text-accent">›</span>
-                        <span className="min-w-0 flex-1 truncate">{task.title}</span>
-                        <span className="text-muted">{task.duration_minutes}</span>
-                        <button
-                            type="button"
-                            className="cursor-pointer text-base text-dim hover:text-muted"
-                            onClick={() => skipTask(task.id)}
-                        >
-                            skip
-                        </button>
-                    </li>
-                ))}
+                {tasks.map((task) => {
+                    const open = openIds.includes(task.id);
+                    return (
+                        <li key={task.id} className="border border-focus px-1.5 py-0.5 leading-5">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    aria-label={open ? "Hide description" : "Show description"}
+                                    aria-expanded={open}
+                                    className={`cursor-pointer text-accent transition-transform ${open ? "rotate-90" : ""}`}
+                                    onClick={() => toggleDescription(task.id)}
+                                >
+                                    ›
+                                </button>
+                                <span className="min-w-0 flex-1 truncate">{task.title}</span>
+                                <span className="text-muted">{task.duration_minutes}</span>
+                                <button
+                                    type="button"
+                                    className="cursor-pointer text-base text-dim hover:text-muted"
+                                    onClick={() => skipTask(task.id)}
+                                >
+                                    skip
+                                </button>
+                            </div>
+                            {open && (
+                                <p className="mt-1 text-base leading-[18px] text-soft">
+                                    {task.description ?? "No description."}
+                                </p>
+                            )}
+                        </li>
+                    );
+                })}
             </ul>
             {skipped.length > 0 && (
                 <button
