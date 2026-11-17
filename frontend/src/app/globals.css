@@ -61,6 +61,15 @@ body {
   &:disabled { opacity: 0.5; cursor: default; }
 }
 
+/* Quieter see-through button, for Cancel and the like. */
+@utility btn-ghost {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid #3A2E20;
+  cursor: pointer;
+  &:hover { background: var(--color-btn-hover); }
+}
+
 /* Dark text input with a brown border; number inputs lose their up/down arrows. */
 @utility field {
   background: var(--color-field);

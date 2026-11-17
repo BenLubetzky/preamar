@@ -33,19 +33,19 @@ export function EditTaskForm({ task, onClose }: { task:Task, onClose: () => void
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <input
-                className="rounded border p-2"
+                className="field h-7 px-1.5"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
             />
             <input
-                className="rounded border p-2"
+                className="field h-7 px-1.5"
                 placeholder="Description (optional)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
             />
             <input
-                className="rounded border p-2"
+                className="field h-7 px-1.5"
                 type="number"
                 min={1}
                 value={duration}
@@ -56,15 +56,15 @@ export function EditTaskForm({ task, onClose }: { task:Task, onClose: () => void
                 <button
                     type="submit"
                     disabled={updateTask.isPending}
-                    className="rounded bg-black px-3 py-1 text-white disabled:opacity-50"
+                    className="btn h-7 px-3"
                 >
                     {updateTask.isPending ? "Saving..." : "Save"}
                 </button>
-                <button type="button" onClick={onClose} className="text-sm">
+                <button type="button" onClick={onClose} className="btn-ghost h-7 px-3">
                     Cancel
                 </button>
             </div>
-            {updateTask.isError && <p className="text-red-600">Couldn&apos;t save the task.</p>}
+            {updateTask.isError && <p className="text-red-400">Couldn&apos;t save the task.</p>}
         </form>
     )
 }

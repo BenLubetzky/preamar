@@ -16,6 +16,8 @@ export function TaskDoneCheckbox({ task }: { task:Task }) {
             checked={task.done_at !== null}
             onChange={(e) => setTaskDone.mutate({ id:task.id, done: e.target.checked })}
             disabled={setTaskDone.isPending}
+            aria-label={`Mark "${task.title}" done`}
+            className="size-3 shrink-0 cursor-pointer appearance-none border border-muted checked:border-accent checked:bg-accent disabled:opacity-50"
         />
     );
 }

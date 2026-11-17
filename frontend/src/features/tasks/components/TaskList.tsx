@@ -13,35 +13,35 @@ export function TaskList() {
   const { data: tasks, isPending, isError } = useTasks();
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  if (isPending) return <p>Loading tasks...</p>;
-  if (isError) return <p>Couldn&apos;t load your tasks.</p>;
-  if (tasks.length === 0) return <p>No tasks yet.</p>;
+  if (isPending) return <p className="text-muted">Loading tasks...</p>;
+  if (isError) return <p className="text-muted">Couldn&apos;t load your tasks.</p>;
+  if (tasks.length === 0) return <p className="text-muted">No tasks yet.</p>;
 
   return (
-    <ul className="mt-6 space-y-2">
+    <ul className="space-y-1">
       {tasks.map((task) =>
         editingId === task.id ? (
-          <li key={task.id} className="rounded border p-3">
+          <li key={task.id} className="border border-line p-2">
             <EditTaskForm task={task} onClose={() => setEditingId(null)} />
           </li>
         ) : (
-          <li key={task.id} className="rounded border p-3">
-            <div className="flex justify-between">
-              <div className="flex items-center gap-2">
-                <TaskDoneCheckbox task={task} />
-                <span className={`font-medium ${task.done_at ? "line-through text-gray-400" : ""}`}>
-                  {task.title}
-                </span>
-              </div>
-              <div className="flex gap-3">
-                <span> {task.duration_minutes} min</span>
-                <button type="button" onClick={() => setEditingId(task.id)} className="text-sm">
-                  Edit
-                </button>
-                <DeleteTaskButton taskId={task.id} />
-              </div>
+          <li key={task.id} className="px-1 py-0.5 leading-5">
+            <div className="flex items-center gap-2">
+              <TaskDoneCheckbox task={task} />
+              <span className={`min-w-0 flex-1 truncate ${task.done_at ? "text-dim line-through" : ""}`}>
+                {task.title}
+              </span>
+              <span className="text-muted">{task.duration_minutes} min</span>
+              <button
+                type="button"
+                onClick={() => setEditingId(task.id)}
+                className="cursor-pointer text-base text-dim hover:text-muted"
+              >
+                edit
+              </button>
+              <DeleteTaskButton taskId={task.id} />
             </div>
-            {task.description && <p className="text-sm text-gray-500">{task.description}</p>}
+            {task.description && <p className="truncate pl-5 text-base text-dim">{task.description}</p>}
           </li>
         ),
       )}
