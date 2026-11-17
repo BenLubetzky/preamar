@@ -6,8 +6,13 @@
 import { useState, type FormEvent } from "react";
 import { useCreateTask } from "../hooks";
 
+/** Closes the New task box. */
+type Props = {
+    onClose: () => void;
+}
+
 /** Lets the user add a new task. */
-export function AddTaskForm() {
+export function AddTaskForm({ onClose }: Props) {
     const createTask = useCreateTask();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -62,6 +67,9 @@ export function AddTaskForm() {
             className="rounded bg-black p-2 text-white disabled:opacity-50"
             >
                 {createTask.isPending ? "Adding..." : "Add task"}
+            </button>
+            <button type="button" className="border p-2" onClick={onClose}>
+                Cancel
             </button>
             {createTask.isError && <p className="text-red-600">Couldn&apos;t add the task.</p>}
         </form>
