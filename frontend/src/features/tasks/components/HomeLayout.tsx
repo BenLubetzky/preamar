@@ -18,12 +18,12 @@ export function HomeLayout() {
     const [showAdd, setShowAdd] = useState(false);
 
     return (
-      <div className="min-h-screen p-6 text-white">
-        <h1 className="text-3xl">preamar</h1>
+      <div className="min-h-screen p-6 font-pixel text-lg text-ink">
+        <h1 className="text-3xl text-accent">preamar</h1>
 
         <div className="mt-6 grid grid-cols-[18rem_24rem_18rem] items-start justify-center gap-6">
             {minutes != null ? (
-                <section className="border bg-black/70 p-4">
+                <section className="panel">
                     <div className="flex justify-between">
                         <h2>What fits</h2>
                         <button type="button" onClick={() => setMinutes(null)}>x</button>
@@ -34,7 +34,7 @@ export function HomeLayout() {
                 <div />
             )}
 
-            <section className="border bg-black/70 p-4">
+            <section className="panel">
                 <div className="flex justify-end">
                     <LogoutButton />
                 </div>
@@ -45,7 +45,7 @@ export function HomeLayout() {
                 </button>
             </section>
             { showAdd ? (
-                <section className="border bg-black/70 p-4">
+                <section className="panel">
                     <div className="flex justify-between">
                         <h2>New task</h2>
                         <button type="button" onClick={() => setShowAdd(false)}>x</button>

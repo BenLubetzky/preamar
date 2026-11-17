@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-pixel: var(--font-vt323);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +24,29 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Preamar colors, from design/preamar-layout.html */
+@theme {
+  --color-ink: #E8DCC0;      /* main text */
+  --color-soft: #C8B890;     /* softer text */
+  --color-muted: #9A8A6A;    /* labels, minutes */
+  --color-dim: #6A5A40;      /* faint text */
+  --color-accent: #F2C86A;   /* amber: titles, buttons */
+  --color-line: #4A3A26;     /* brown frame, input borders */
+  --color-focus: #8A6A30;    /* focused input, matching task */
+  --color-field: #1A1510;    /* input background */
+  --color-btn: #2A2016;      /* button background, dividers */
+  --color-btn-hover: #3A2C1C;
+  --color-btn-line: #6A5030; /* button border */
+  --color-panel: #0E0C09E8;  /* box background, slightly see-through */
+}
+
+/* The dark box with the brown inner frame. */
+@utility panel {
+  background: var(--color-panel);
+  border: 2px solid #050403;
+  outline: 1px solid var(--color-line);
+  outline-offset: -5px;
+  padding: 14px 16px;
 }
