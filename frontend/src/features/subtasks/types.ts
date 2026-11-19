@@ -14,3 +14,9 @@ export type Subtask = {
 export type SubtaskInput = {
     title: string;
 };
+
+/** One subtask row in a task form (SubtaskEdit): with an id it already exists, without one it's new. */
+export type SubtaskDraft = {
+    id?: string;
+    title: string;
+};

@@ -1,7 +1,7 @@
 // The shapes of task data coming from and going to the backend
 // Mirrors backend/app/features/tasks/schemas.py: change one, change the other
 
-import type { Subtask } from "@/features/subtasks/types";
+import type { Subtask, SubtaskDraft } from "@/features/subtasks/types";
 
 /** One task as the backend sends it (TaskRead). */
 export type Task = {
@@ -23,5 +23,8 @@ export type TaskCreate = {
 }
 
 /** What we send to edit a task: only the fields that changed (TaskUpdate). */
-// Omit removes a field from a type; Partial makes every remaining field optional
-export type TaskUpdate = Partial<Omit<TaskCreate, "subtasks">>;
+// Omit removes a field from a type; Partial makes every remaining field optional.
+// & joins two types: the edited subtask list replaces the plain titles TaskCreate has.
+export type TaskUpdate = Partial<Omit<TaskCreate, "subtasks">> & {
+    subtasks?: SubtaskDraft[];
+};
