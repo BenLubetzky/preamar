@@ -2,9 +2,11 @@
 # The user comes from the token (core/auth.py); ownership is checked through the parent task.
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
@@ -26,6 +28,19 @@ def get_own_subtask(subtask_id: uuid.UUID, user_id: uuid.UUID, db: Session) -> S
         raise HTTPException(status_code=404, detail="Subtask not found")
     return subtask
 
+def sync_task_done(task_id: uuid.UUID, db:Session) -> None:
+    """Make the task done exactly when all its subtasks are done; leave it alone if it has none."""
+    done_times = db.scalars(select(Subtask.done_at).where(Subtask.task_id == task_id)).all()
+    if not done_times:
+        return
+    task = db.get(Task, task_id)
+    if all(done_at is not None for done_at in done_times):
+        # Keep the original done time if it was already done
+        if task.done_at is None:
+            task.done_at = datetime.now(timezone.utc)
+    else:
+        task.done_at = None
+
 
 @router.post("/tasks/{task_id}/subtasks", status_code=201)
 def create_subtask(
@@ -38,6 +53,7 @@ def create_subtask(
     get_own_task(task_id, user_id, db)
     subtask = Subtask(**subtask_in.model_dump(), task_id=task_id)
     db.add(subtask)
+    sync_task_done(task_id, db)
     db.commit()
     db.refresh(subtask)
     return SubtaskRead.model_validate(subtask)
@@ -66,5 +82,37 @@ def delete_subtask(
 ) -> None:
     """Delete one of the logged in user's subtasks"""
     subtask = get_own_subtask(subtask_id, user_id, db)
+    task_id = subtask.task_id
     db.delete(subtask)
+    sync_task_done(task_id, db)
     db.commit()
+
+
+@router.post("/subtasks/{subtask_id}/done")
+def mark_subtask_done(
+    subtask_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> SubtaskRead:
+    """Mark one of the logged in user's subtasks as done, and its task too if it was the last open subtask"""
+    subtask = get_own_subtask(subtask_id, user_id, db)
+    if subtask.done_at is None:
+        subtask.done_at = datetime.now(timezone.utc)
+    sync_task_done(subtask.task_id, db)
+    db.commit()
+    db.refresh(subtask)
+    return SubtaskRead.model_validate(subtask)
+
+@router.post("/subtasks/{subtask_id}/undone")
+def mark_subtask_undone(
+    subtask_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> SubtaskRead:
+    """Mark one of the logged in user's subtasks as not done, which makes its task not done too"""
+    subtask = get_own_subtask(subtask_id, user_id, db)
+    subtask.done_at = None
+    sync_task_done(subtask.task_id, db)
+    db.commit()
+    db.refresh(subtask)
+    return SubtaskRead.model_validate(subtask)
