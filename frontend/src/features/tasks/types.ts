@@ -19,8 +19,9 @@ export type TaskCreate = {
     title: string;
     description?: string | null;
     duration_minutes: number;
+    subtasks?: string[];
 }
 
 /** What we send to edit a task: only the fields that changed (TaskUpdate). */
-// Partial takes a type and makes every field in it optional
-export type TaskUpdate = Partial<TaskCreate>;
+// Omit removes a field from a type; Partial makes every remaining field optional
+export type TaskUpdate = Partial<Omit<TaskCreate, "subtasks">>;

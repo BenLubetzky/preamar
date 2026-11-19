@@ -5,6 +5,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useCreateTask } from "../hooks";
+import { NewSubtasksField } from "@/features/subtasks/components/NewSubtasksField";
 
 /** Closes the New task box. */
 type Props = {
@@ -17,6 +18,7 @@ export function AddTaskForm({ onClose }: Props) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [duration, setDuration] = useState("");
+    const [subtasks, setSubtasks] = useState<string[]>([]);
 
     /** Sends the new task to the backend and empties the form on success. */
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -26,12 +28,15 @@ export function AddTaskForm({ onClose }: Props) {
                 title,
                 description: description || null,
                 duration_minutes: Number(duration),
+                // Blank rows are dropped; the backend rejects empty titles
+                subtasks: subtasks.map((t) => t.trim()).filter((t) => t !== ""),
             },
             {
                 onSuccess: () => {
                     setTitle("");
                     setDescription("");
                     setDuration("");
+                    setSubtasks([]);
                 },
             },
         );
@@ -67,6 +72,8 @@ export function AddTaskForm({ onClose }: Props) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
             />
+
+            <NewSubtasksField titles={subtasks} onChange={setSubtasks} />
 
             <label htmlFor="new-task-minutes" className="mt-2.5 mb-1 block text-base tracking-wide text-muted">
                 Minutes
