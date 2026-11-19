@@ -6,6 +6,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.features.subtasks.schemas import SubtaskRead
+
 class TaskCreate(BaseModel):
     # What the frontend sends to create a task. No id, user_id, done_at or created_at,
     # These will all be filled by the backend so they can't be faked
@@ -28,6 +30,7 @@ class TaskRead(BaseModel):
     duration_minutes: int
     done_at: datetime | None
     created_at: datetime
+    subtasks: list[SubtaskRead]
 
 
 class TaskUpdate(BaseModel):

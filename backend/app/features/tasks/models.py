@@ -5,7 +5,12 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
+
+# To avoid circular import (since subtasks import tasks we don't want to get caught in an infinite loop)
+if TYPE_CHECKING:
+    from app.features.subtasks.models import Subtask
 
 from app.core.database import Base
 import app.features.users.models # noqa: F401
@@ -20,3 +25,6 @@ class Task(Base):
     duration_minutes:Mapped[int]
     done_at:Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    subtasks: Mapped[list["Subtask"]] = relationship(
+        order_by="Subtask.created_at", cascade="all, delete-orphan", passive_deletes=True
+    )

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
@@ -24,7 +24,8 @@ def list_tasks(
     db: Session = Depends(get_db)
 ) -> list[TaskRead]:
     """List the logged-in user's tasks, oldest first"""
-    query = select(Task).where(Task.user_id == user_id).order_by(Task.created_at)
+    # selectinload fetches all the subtasks for all the tasks in one extra query.
+    query = select(Task).where(Task.user_id == user_id).options(selectinload(Task.subtasks)).order_by(Task.created_at)
     tasks = db.scalars(query).all()
 
     return [TaskRead.model_validate(task) for task in tasks]
@@ -93,6 +94,8 @@ def mark_task_done(
 ) -> TaskRead:
     """Mark one of the logged in user's tasks as done"""
     task = get_own_task(task_id, user_id, db)
+    if any(subtask.done_at is None for subtask in task.subtasks):
+            raise HTTPException(status_code=409, detail="Task has open subtasks")
     # In case there is already a done time, keep it
     if task.done_at is None:
         task.done_at = datetime.now(timezone.utc)
@@ -126,7 +129,7 @@ def recommend_tasks(
     leaving out the skipped ones."""
     query = select(Task).where(Task.user_id == user_id, 
                                Task.done_at.is_(None),
-                               Task.id.not_in(skip),)
+                               Task.id.not_in(skip),).options(selectinload(Task.subtasks))
     tasks = db.scalars(query).all()
     chosen = recommend(list(tasks), minutes)
     return [TaskRead.model_validate(task) for task in chosen]
