@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.features.tasks.models import Task
 from app.features.tasks.schemas import TaskRead, TaskCreate, TaskUpdate
 from app.features.tasks.recommend import recommend
+from app.features.subtasks.models import Subtask
 
 # Every route in this file starts with /tasks. tag groups them under "tasks" on the docs page.
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -39,7 +40,8 @@ def create_task(
     db: Session = Depends(get_db),
 ) -> TaskRead:
     """Create a task for the logged-in user"""
-    task = Task(**task_in.model_dump(), user_id=user_id)
+    task = Task(**task_in.model_dump(exclude={"subtasks"}), user_id=user_id)
+    task.subtasks = [Subtask(title=title) for title in task_in.subtasks]
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -94,13 +96,15 @@ def mark_task_done(
 ) -> TaskRead:
     """Mark one of the logged in user's tasks as done"""
     task = get_own_task(task_id, user_id, db)
-    if any(subtask.done_at is None for subtask in task.subtasks):
-            raise HTTPException(status_code=409, detail="Task has open subtasks")
+    now = datetime.now(timezone.utc)
+    for subtask in task.subtasks:
+        if subtask.done_at is None:
+            subtask.done_at = now
     # In case there is already a done time, keep it
     if task.done_at is None:
-        task.done_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(task)
+        task.done_at = now
+    db.commit()
+    db.refresh(task)
     return TaskRead.model_validate(task)
 
 

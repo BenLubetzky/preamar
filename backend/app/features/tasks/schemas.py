@@ -4,6 +4,7 @@
 import uuid
 from datetime import datetime
 
+from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.features.subtasks.schemas import SubtaskRead
@@ -15,6 +16,7 @@ class TaskCreate(BaseModel):
     description: str | None = None
     # gt = greater than
     duration_minutes: int = Field(gt=0)
+    subtasks: list[Annotated[str, Field(min_length=1)]] = []
 
 class TaskRead(BaseModel):
     # What the API sends back for one task. user_id is left out on purpose since the frontend knows already 
