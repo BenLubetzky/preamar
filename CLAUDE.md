@@ -12,7 +12,6 @@ The owner reviews and understands every line of code in this project. No vibe co
 - **Stop and wait.** Wait for the owner's review and OK before the next step. Don't chain steps.
 - **Let the owner write it.** When they're learning something new, offer guidance instead of writing it for them.
 - **"Just do it all"?** Remind them of these rules once, then follow their call.
-- **Respect the MVP scope.** Don't push features into the MVP. Ideas go in the "Later" list in [README.md](README.md), without lobbying.
 - **Be concise.** Short answers, unfamiliar terms explained in one line, and only blocking issues raised.
 
 ## Stack

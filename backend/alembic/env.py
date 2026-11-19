@@ -12,6 +12,7 @@ from app.core.database import Base
 # Without it Alembic doesn't know the table exists
 import app.features.users.models #noqa: F401
 import app.features.tasks.models #noqa: F401
+import app.features.subtasks.models #noqa: F401
 # "noqa: F401" tells code checking tools "unused on purpose"
 
 # this is the Alembic Config object, which provides

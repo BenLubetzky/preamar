@@ -1,5 +1,5 @@
 # The FastAPI app: creates it and plugs in each feature's routes.
-# Run with uvicorn app.main:app --reload (from the backend folder)
+# Run with python -m uvicorn app.main:app --reload (from the backend folder)
 
 import uuid
 from fastapi import FastAPI, Depends

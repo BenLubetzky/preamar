@@ -42,15 +42,43 @@ export function Countdown({ minutes, onStart }: Props) {
             ) : (
                 <button
                     type="button"
-                    className="btn h-7 px-3"
+                    className="btn flex size-8 items-center justify-center"
+                    title={running ? "Pause" : "Start"}
+                    aria-label={running ? "Pause" : "Start"}
                     onClick={() => {
                         if (!running) onStart?.();
                         setRunning(!running);
                     }}
                 >
-                    {running ? "Pause" : "Start"}
+                    {running ? <PauseIcon /> : <PlayIcon />}
                 </button>
             )}
         </div>
+    );
+}
+
+/** A 7×7 pixel "play" triangle, in the same style as the magnifier icon. */
+function PlayIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+            <rect x="1" y="0" width="1" height="7" fill="#F2C86A" />
+            <rect x="2" y="1" width="1" height="5" fill="#F2C86A" />
+            <rect x="3" y="1" width="1" height="5" fill="#F2C86A" />
+            <rect x="4" y="2" width="1" height="3" fill="#F2C86A" />
+            <rect x="5" y="3" width="1" height="1" fill="#F2C86A" />
+            <rect x="2" y="1" width="1" height="1" fill="#8A6A30" />
+        </svg>
+    );
+}
+
+/** A 7×7 pixel "pause" sign: two bars. */
+function PauseIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+            <rect x="1" y="0" width="2" height="7" fill="#F2C86A" />
+            <rect x="4" y="0" width="2" height="7" fill="#F2C86A" />
+            <rect x="1" y="0" width="1" height="1" fill="#8A6A30" />
+            <rect x="4" y="0" width="1" height="1" fill="#8A6A30" />
+        </svg>
     );
 }
