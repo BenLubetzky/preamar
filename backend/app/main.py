@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.auth import get_current_user_id
 
 from app.features.tasks.router import router as tasks_router
+from app.features.subtasks.router import router as subtasks_router
 
 app = FastAPI(title="Preamar")
 
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(tasks_router)
+app.include_router(subtasks_router)
 
 @app.get("/health")
 def health():
