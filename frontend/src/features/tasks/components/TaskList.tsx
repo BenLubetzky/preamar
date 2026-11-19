@@ -7,6 +7,7 @@ import { useTasks } from "../hooks";
 import { DeleteTaskButton } from "./DeleteTaskButton";
 import { TaskDoneCheckbox } from "./TaskDoneCheckbox";
 import { EditTaskForm } from "./EditTaskForm";
+import { SubtaskList } from "@/features/subtasks/components/SubtaskList";
 
 /** Shows each task's title, description and duration, or the edit form for the one being edited. */
 export function TaskList() {
@@ -42,6 +43,11 @@ export function TaskList() {
               <DeleteTaskButton taskId={task.id} />
             </div>
             {task.description && <p className="truncate pl-6 text-lg text-dim">{task.description}</p>}
+            {task.subtasks.length > 0 && (
+              <div className="mt-0.5 pl-6">
+                <SubtaskList subtasks={task.subtasks} />
+              </div>
+            )}
           </li>
         ),
       )}
