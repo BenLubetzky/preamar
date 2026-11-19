@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.features.subtasks.schemas import SubtaskRead
+from app.features.subtasks.schemas import SubtaskEdit, SubtaskRead
 
 class TaskCreate(BaseModel):
     # What the frontend sends to create a task. No id, user_id, done_at or created_at,
@@ -39,3 +39,5 @@ class TaskUpdate(BaseModel):
     title: str = Field(default=None, min_length=1)
     description: str | None = None
     duration_minutes: int = Field(default=None, gt=0)
+    # None = leave subtasks alone; a list = make the subtasks match it exactly
+    subtasks: list[SubtaskEdit] | None = None

@@ -23,3 +23,8 @@ class SubtaskRead(BaseModel):
 class SubtaskUpdate(BaseModel):
     """What the frontend sends to rename a subtask."""
     title: str = Field(min_length=1)
+
+class SubtaskEdit(BaseModel):
+    """One subtask as the edit form sends it: with an id it already exists, without one it's new."""
+    id: uuid.UUID | None = None
+    title: str = Field(min_length=1)

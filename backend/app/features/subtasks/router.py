@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
@@ -14,6 +13,7 @@ from app.features.tasks.models import Task
 from app.features.tasks.router import get_own_task
 from app.features.subtasks.models import Subtask
 from app.features.subtasks.schemas import SubtaskCreate, SubtaskRead, SubtaskUpdate
+from app.features.subtasks.service import sync_task_done
 
 # No prefix: creating lives under /tasks/{id}/subtasks, the rest under /subtasks/{id}
 router = APIRouter(tags=["subtasks"])
@@ -27,19 +27,6 @@ def get_own_subtask(subtask_id: uuid.UUID, user_id: uuid.UUID, db: Session) -> S
     if task is None or task.user_id != user_id:
         raise HTTPException(status_code=404, detail="Subtask not found")
     return subtask
-
-def sync_task_done(task_id: uuid.UUID, db:Session) -> None:
-    """Make the task done exactly when all its subtasks are done; leave it alone if it has none."""
-    done_times = db.scalars(select(Subtask.done_at).where(Subtask.task_id == task_id)).all()
-    if not done_times:
-        return
-    task = db.get(Task, task_id)
-    if all(done_at is not None for done_at in done_times):
-        # Keep the original done time if it was already done
-        if task.done_at is None:
-            task.done_at = datetime.now(timezone.utc)
-    else:
-        task.done_at = None
 
 
 @router.post("/tasks/{task_id}/subtasks", status_code=201)

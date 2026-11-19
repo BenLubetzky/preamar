@@ -14,6 +14,7 @@ from app.features.tasks.models import Task
 from app.features.tasks.schemas import TaskRead, TaskCreate, TaskUpdate
 from app.features.tasks.recommend import recommend
 from app.features.subtasks.models import Subtask
+from app.features.subtasks.service import sync_task_done
 
 # Every route in this file starts with /tasks. tag groups them under "tasks" on the docs page.
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -65,10 +66,25 @@ def update_task(
     user_id: uuid.UUID = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ) -> TaskRead:
-    """Change the sent fields of one of the logged in user's tasks"""
+    """Change the sent fields of one of the logged in user's tasks; a sent subtask list replaces the current one"""
     task = get_own_task(task_id, user_id, db)
-    for field, value in task_in.model_dump(exclude_unset=True).items():
+    for field, value in task_in.model_dump(exclude_unset=True, exclude={"subtasks"}).items():
         setattr(task, field, value)
+    if task_in.subtasks is not None:
+        # id -> subtask, so each edit finds its subtask in one lookup
+        current = {subtask.id: subtask for subtask in task.subtasks}
+        kept = []
+        for edit in task_in.subtasks:
+            subtask = current.get(edit.id)
+            # No id, or an id that isn't one of this task's subtasks: it's a new one
+            if subtask is None:
+                subtask = Subtask(title=edit.title)
+            else:
+                subtask.title = edit.title
+            kept.append(subtask)
+        # delete-orphan: any subtask left out of this list is deleted
+        task.subtasks = kept
+        sync_task_done(task.id, db)
     db.commit()
     # db.refresh reloads the row from the database into the Python object
     db.refresh(task)
