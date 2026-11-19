@@ -1,10 +1,11 @@
 "use client"
 
-// One-task view in the recommended tasks box, it contains: the current task's title, duration and description.
+// One-task view in the recommended tasks box, it contains: the current task's title, duration, description and subtasks.
 // Marks the task done through useSetTaskDone() in hooks.ts; the parent decides which task comes next.
 
 import { useSetTaskDone } from "../hooks";
 import type { Task } from "../types";
+import { SubtaskList } from "@/features/subtasks/components/SubtaskList";
 
 type Props = {
     /** The task to show. */
@@ -31,6 +32,13 @@ export function FocusTask({ task, position, count, onDone }: Props) {
             <p className="mt-1 text-base leading-[18px] text-soft">
                 {task.description ?? "No description."}
             </p>
+            {/* Ticking every box makes the task done but doesn't move on; only Done does that */}
+            {task.subtasks.length > 0 && (
+                <div className="mt-2">
+                    <SubtaskList subtasks={task.subtasks} />
+                </div>
+            )}
+            {/* Done also marks any open subtasks done (the backend does that) */}
             <button
                 type="button"
                 className="btn mt-3 h-8 w-full"

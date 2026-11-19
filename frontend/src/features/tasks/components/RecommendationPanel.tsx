@@ -4,7 +4,7 @@
 // The minutes come from HomeLayout.tsx; the answer comes from useRecommendation in hooks.ts
 
 import { useState } from "react";
-import { useRecommendation } from "../hooks";
+import { useRecommendation, useTasks } from "../hooks";
 import { Countdown } from "./Countdown";
 import type { Task } from "../types";
 import { FocusTask } from "./FocusTask";
@@ -21,6 +21,8 @@ export function RecommendationPanel({ minutes }: Props) {
     const [focusTasks, setFocusTasks] = useState<Task[] | null>(null);
     const [current, setCurrent] = useState(0);
     const { data: tasks, isPending, isError } = useRecommendation(minutes, skipped);
+    // The live task list, so the one-task view shows fresh subtask ticks instead of the frozen copy
+    const { data: allTasks } = useTasks();
 
     /** Adds a task for the skipped list so the next recommendation leaves it out. */
     function skipTask(id: string) {
@@ -42,7 +44,10 @@ export function RecommendationPanel({ minutes }: Props) {
     // One-task mode. Its shape matches the list's return below (a <div>, then the Countdown second),
     // so React keeps the same Countdown and the timer doesn't reset.
     if (focusTasks) {
-        const task = focusTasks[current];
+        // The frozen list fixes the order and count; the data shown comes from the live list
+        // (falls back to the frozen copy if the task is gone from it, e.g. deleted meanwhile)
+        const frozen = focusTasks[current];
+        const task = frozen && (allTasks?.find((t) => t.id === frozen.id) ?? frozen);
         return (
             <div>
                 {task ? (
