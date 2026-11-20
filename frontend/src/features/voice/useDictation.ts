@@ -1,40 +1,45 @@
 "use client";
 
-// Turns speech into text with the browser's built-in Web Speech API (Chrome has it).
-// Owns the "listening" on/off state; each finished phrase is handed to the onText callback.
-// Browsers without the API (e.g. Firefox) get supported = false; a fallback comes later.
+// Turns speech into text with the Moonshine model, which runs in the browser (speech.worker.ts).
+// Owns the "listening" on/off state: records the mic (micRecorder.ts), cuts the sound at each pause,
+// and sends each phrase to the worker; the text that comes back goes to the onText callback.
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { startMic } from "./micRecorder";
+import type { WorkerMessage } from "./speech.worker";
 
-// TypeScript ships no types for the Web Speech API, so these describe the few parts we use.
-type RecognitionResultEvent = {
-    resultIndex: number;
-    results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
-};
+const SAMPLE_RATE = 16000;            // sound samples per second
+const LOUD = 0.01;                    // a volume above this counts as speaking
+const PAUSE = SAMPLE_RATE * 0.7;      // 0.7 seconds of quiet ends a phrase
+const MAX_PHRASE = SAMPLE_RATE * 20;  // after 20 seconds, send the phrase anyway
 
-type Recognition = {
-    continuous: boolean;
-    interimResults: boolean;
-    onresult: ((event: RecognitionResultEvent) => void) | null;
-    onend: (() => void) | null;
-    start: () => void;
-    stop: () => void;
-};
-
-type RecognitionClass = new () => Recognition;
-
-/** Returns the browser's speech recognition class, or null if the browser has none. */
-function getRecognitionClass(): RecognitionClass | null {
-    const w = window as unknown as {
-        SpeechRecognition?: RecognitionClass;
-        webkitSpeechRecognition?: RecognitionClass;
-    };
-    return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+/** Whether this browser can record the mic the way micRecorder.ts does. */
+function isSupported() {
+    return typeof AudioWorkletNode !== "undefined" && navigator.mediaDevices != null;
 }
 
 /** A subscribe function that never fires: browser support doesn't change while the page is open. */
 function subscribeNever() {
     return () => {};
+}
+
+/** How loud a chunk of sound is, from 0 (silent) up to about 1. */
+function volume(chunk: Float32Array) {
+    let sum = 0;
+    for (const sample of chunk) sum += sample * sample;
+    return Math.sqrt(sum / chunk.length);
+}
+
+/** Glues many small chunks into one long piece of sound. */
+function join(chunks: Float32Array[]) {
+    const total = chunks.reduce((length, chunk) => length + chunk.length, 0);
+    const sound = new Float32Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+        sound.set(chunk, offset);
+        offset += chunk.length;
+    }
+    return sound;
 }
 
 /**
@@ -43,63 +48,89 @@ function subscribeNever() {
  * onText is a function the form gave us and it decides what to do with the words.
  */
 export function useDictation(onText: (text: string) => void) {
-    // Supported is true/false depending on if the browser has or not a speech to text,
+    // Supported is true/false depending on if the browser can record the mic,
     // useSyncExternalStore can re-check the answer when something changes, we tell it to not bother.
-    // getRecognitionClass() checks in the browser, and () => false is on the server side,
+    // isSupported checks in the browser, and () => false is on the server side,
     // since we don't have a microphone it says false.
-    const supported = useSyncExternalStore(
-        subscribeNever,
-        () => getRecognitionClass() !== null,
-        () => false,
-    );
+    const supported = useSyncExternalStore(subscribeNever, isSupported, () => false);
 
     // a state that says whether the mic is on or off.
     const [listening, setListening] = useState(false);
 
-    // The box that holds the listener, the thing that's hearing your voice. Starts as null.
-    const recognitionRef = useRef<Recognition | null>(null);
+    // The box that holds the worker (the background program running Moonshine). Starts as null.
+    const workerRef = useRef<Worker | null>(null);
 
-    // The useEffect runs once when the form opens, and it returns a function that is used later for cleanup.
+    // The box that holds the function that turns the mic off. null means the mic is off.
+    const stopRef = useRef<(() => void) | null>(null);
+
+    // The useEffect runs once when the form opens, and it returns a function that is used later for cleanup:
+    // turn the mic off and shut the worker down.
     useEffect(() => {
-        return () => recognitionRef.current?.stop();
+        return () => {
+            stopRef.current?.();
+            workerRef.current?.terminate();
+        };
     }, []);
 
-    /** Starts listening; does nothing if unsupported or already listening. */
-    function start() {
-        // Getting the browser's speech tool.
-        const RecognitionClass = getRecognitionClass();
-        // If the browser has no speech tool or if we already have a listener, the mic is already on.
-        if (!RecognitionClass || recognitionRef.current) return;
+    /** Turns the mic on and starts sending phrases to the worker. */
+    async function start() {
+        if (stopRef.current) return; // already listening
 
-        // Making a new listener from the browser's speech tool
-        const recognition = new RecognitionClass();
-        recognition.continuous = true;      // keep listening through pauses until stop()
-        recognition.interimResults = false; // only hand back finished phrases, not guesses
+        // The first time, start the worker; it begins loading the model right away.
+        if (!workerRef.current) {
+            workerRef.current = new Worker(new URL("./speech.worker.ts", import.meta.url), { type: "module" });
+        }
+        const worker = workerRef.current;
+        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
+            if (event.data.status === "text" && event.data.text) onText(event.data.text);
+        };
 
-        // Giving the listener a function to call everytime it hears a text.
-        recognition.onresult = (event) => {
-            // results holds everything said so far; resultIndex is where the new part starts.
-            // Iterating over new phrasses in the list.
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const result = event.results[i];
-                if (result.isFinal) onText(result[0].transcript.trim());
+        // The phrase being spoken right now.
+        let chunks: Float32Array[] = [];
+        let length = 0;   // samples in the phrase
+        let quiet = 0;    // samples of quiet since the last loud chunk
+        let spoke = false;
+
+        /** Sends the phrase to the worker if anything was said, then starts a new one. */
+        function endPhrase() {
+            if (spoke) worker.postMessage({ audio: join(chunks) });
+            chunks = [];
+            length = 0;
+            quiet = 0;
+            spoke = false;
+        }
+
+        /** Runs for every tiny chunk from the mic. */
+        function onAudio(chunk: Float32Array) {
+            chunks.push(chunk);
+            length += chunk.length;
+            if (volume(chunk) > LOUD) {
+                spoke = true;
+                quiet = 0;
+            } else {
+                quiet += chunk.length;
             }
-        };
-        // Fires after stop(), after an error, or when the browser gives up on silence.
-        recognition.onend = () => {
-            recognitionRef.current = null;
-            setListening(false);
-        };
+            // A long pause ends the phrase. Before any speech it just throws the silence away.
+            if (quiet > PAUSE || length > MAX_PHRASE) endPhrase();
+        }
 
-        recognitionRef.current = recognition;
-        // Turns the microphone on and starts listening.
-        recognition.start();
-        setListening(true);
+        try {
+            const stopMic = await startMic(onAudio);
+            stopRef.current = () => {
+                stopMic();
+                endPhrase(); // whatever was said right before stopping still gets sent
+            };
+            setListening(true);
+        } catch {
+            // The user blocked the mic, or there is none: stay off.
+        }
     }
 
-    /** Stops listening; the last phrase still arrives before onend. */
+    /** Turns the mic off; the last phrase still comes back as text. */
     function stop() {
-        recognitionRef.current?.stop();
+        stopRef.current?.();
+        stopRef.current = null;
+        setListening(false);
     }
 
     return { supported, listening, start, stop };
