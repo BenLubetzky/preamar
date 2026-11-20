@@ -6,6 +6,7 @@
 import { useState, type FormEvent } from "react";
 import { useCreateTask } from "../hooks";
 import { NewSubtasksField } from "@/features/subtasks/components/NewSubtasksField";
+import { MicButton } from "@/features/voice/components/MicButton";
 
 /** Closes the New task box. */
 type Props = {
@@ -47,6 +48,11 @@ export function AddTaskForm({ onClose }: Props) {
         setDuration(String(Math.max(1, Number(duration) + change)));
     }
 
+    /** Adds spoken words to the end of the description, with a space between. */
+    function addSpokenText(text: string) {
+        setDescription((prev) => (prev ? prev + " " + text : text));
+    }
+
     return (
         <form onSubmit={handleSubmit}>
             <label htmlFor="new-task-name" className="mt-2.5 mb-1 block text-base tracking-wide text-muted">
@@ -61,9 +67,12 @@ export function AddTaskForm({ onClose }: Props) {
                 required
             />
 
-            <label htmlFor="new-task-description" className="mt-2.5 mb-1 block text-base tracking-wide text-muted">
-                Description
-            </label>
+            <div className="mt-2.5 mb-1 flex items-center justify-between">
+                <label htmlFor="new-task-description" className="block text-base tracking-wide text-muted">
+                    Description
+                </label>
+                <MicButton onText={addSpokenText} />
+            </div>
             <textarea
                 id="new-task-description"
                 className="field w-full resize-none px-1.5 py-1 leading-[18px]"
