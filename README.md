@@ -27,4 +27,8 @@ Discussed one at a time, in this order:
 
 ## Later
 
-Nothing yet.
+In order:
+
+1. **Mic for descriptions** (in progress): speak to add to a task's description. Chrome's built-in Web Speech API; a free local model as the fallback where the browser lacks it (e.g. Firefox).
+2. **Movable boxes**: drag the main screen's boxes around.
+3. **Instant updates**: change the screen right away (e.g. marking a task done) while the backend saves, instead of waiting for the refetch.
