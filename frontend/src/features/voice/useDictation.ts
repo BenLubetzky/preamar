@@ -6,12 +6,13 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { startMic } from "./micRecorder";
-import type { WorkerMessage } from "./speech.worker";
+import type { AudioMessage, WorkerMessage } from "./speech.worker";
 
 const SAMPLE_RATE = 16000;            // sound samples per second
 const LOUD = 0.01;                    // a volume above this counts as speaking
 const PAUSE = SAMPLE_RATE * 0.7;      // 0.7 seconds of quiet ends a phrase
 const MAX_PHRASE = SAMPLE_RATE * 20;  // after 20 seconds, send the phrase anyway
+const DRAFT_EVERY = SAMPLE_RATE * 0.5; // while speaking, send a draft every half second
 
 /** Whether this browser can record the mic the way micRecorder.ts does. */
 function isSupported() {
@@ -46,8 +47,9 @@ function join(chunks: Float32Array[]) {
  * Listens to the mic and calls onText with each finished phrase.
  * onText should use a functional update (setX(prev => ...)) since it's captured when listening starts.
  * onText is a function the form gave us and it decides what to do with the words.
+ * onLiveText gets the draft of the phrase still being spoken ("" when there is none), to show but not save.
  */
-export function useDictation(onText: (text: string) => void) {
+export function useDictation(onText: (text: string) => void, onLiveText: (text: string) => void) {
     // Supported is true/false depending on if the browser can record the mic,
     // useSyncExternalStore can re-check the answer when something changes, we tell it to not bother.
     // isSupported checks in the browser, and () => false is on the server side,
@@ -81,9 +83,6 @@ export function useDictation(onText: (text: string) => void) {
             workerRef.current = new Worker(new URL("./speech.worker.ts", import.meta.url), { type: "module" });
         }
         const worker = workerRef.current;
-        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
-            if (event.data.status === "text" && event.data.text) onText(event.data.text);
-        };
 
         // The phrase being spoken right now.
         let chunks: Float32Array[] = [];
@@ -91,19 +90,53 @@ export function useDictation(onText: (text: string) => void) {
         let quiet = 0;    // samples of quiet since the last loud chunk
         let spoke = false;
 
-        /** Sends the phrase to the worker if anything was said, then starts a new one. */
+        // Drafts.
+        let phrase = 0;             // the number of the current phrase; goes up each time one ends
+        let draftWaiting = false;   // a draft was sent and its text hasn't come back yet
+        let sinceDraft = 0;         // samples since the last draft was sent
+
+        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
+            const message = event.data;
+            if (message.status !== "text") return;
+            if (message.final) {
+                // A finished phrase: the draft goes away and the real text is added for good.
+                onLiveText("");
+                if (message.text) onText(message.text);
+            } else {
+                draftWaiting = false;
+                // Only show it if it's a draft of the phrase still being spoken, not an older one.
+                if (message.phrase === phrase) onLiveText(message.text);
+            }
+        };
+
+        /** Sends the phrase to the worker as final if anything was said, then starts a new one. */
         function endPhrase() {
-            if (spoke) worker.postMessage({ audio: join(chunks) });
+            if (spoke) {
+                const message: AudioMessage = { audio: join(chunks), final: true, phrase };
+                worker.postMessage(message);
+                phrase++;
+            }
             chunks = [];
             length = 0;
             quiet = 0;
             spoke = false;
+            sinceDraft = 0;
+        }
+
+        /** Sends the phrase so far as a draft, if speaking, it's been half a second, and no draft is waiting. */
+        function maybeSendDraft() {
+            if (!spoke || draftWaiting || sinceDraft < DRAFT_EVERY) return;
+            const message: AudioMessage = { audio: join(chunks), final: false, phrase };
+            worker.postMessage(message);
+            draftWaiting = true;
+            sinceDraft = 0;
         }
 
         /** Runs for every tiny chunk from the mic. */
         function onAudio(chunk: Float32Array) {
             chunks.push(chunk);
             length += chunk.length;
+            sinceDraft += chunk.length;
             if (volume(chunk) > LOUD) {
                 spoke = true;
                 quiet = 0;
@@ -112,6 +145,7 @@ export function useDictation(onText: (text: string) => void) {
             }
             // A long pause ends the phrase. Before any speech it just throws the silence away.
             if (quiet > PAUSE || length > MAX_PHRASE) endPhrase();
+            else maybeSendDraft();
         }
 
         try {

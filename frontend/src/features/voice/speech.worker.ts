@@ -8,7 +8,10 @@ import { pipeline } from "@huggingface/transformers";
 export type WorkerMessage =
     | { status: "ready" }
     | { status: "error" }
-    | { status: "text"; text: string };
+    | { status: "text"; text: string; final: boolean; phrase: number };
+
+/** What the page sends: a piece of sound, which phrase it belongs to, and whether that phrase is finished. */
+export type AudioMessage = { audio: Float32Array; final: boolean; phrase: number };
 
 // Moonshine is a better speech to text than the browser one, even though it's not reall tested.
 const MODEL = "onnx-community/moonshine-base-ONNX";
@@ -36,13 +39,28 @@ function send(message: WorkerMessage) {
 const modelPromise = loadModel();
 modelPromise.then(() => send({ status: "ready" }), () => send({ status: "error" }));
 
-/** Turns one piece of audio (16,000 samples per second, mono) into text and sends it back. */
-// onmessage is what the worker does when it sends a message.
-self.onmessage = async (event: MessageEvent<{ audio: Float32Array }>) => {
-    // transcriber is a speech to text function pipeline gave us.
-    const transcriber = await modelPromise;
-    const output = await transcriber(event.data.audio);
-    // It answers with one result, or a list when given several pieces at once; we only ever send one.
-    const text = Array.isArray(output) ? output[0].text : output.text;
-    send({ status: "text", text: text.trim() });
+/**
+ * Turns one piece of audio (16,000 samples per second, mono) into text and sends it back,
+ * with the same phrase number and final flag so the page knows what it's an answer to.
+ */
+async function transcribe({ audio, final, phrase }: AudioMessage) {
+    let text = "";
+    try {
+        // transcriber is a speech to text function pipeline gave us.
+        const transcriber = await modelPromise;
+        const output = await transcriber(audio);
+        // It answers with one result, or a list when given several pieces at once; we only ever send one.
+        text = (Array.isArray(output) ? output[0].text : output.text).trim();
+    } catch {
+        // If it fails we still answer (with no text), so the page isn't left waiting.
+    }
+    send({ status: "text", text, final, phrase });
+}
+
+// The model works on one piece at a time, so pieces wait in line here, in the order they arrived.
+let queue: Promise<void> = Promise.resolve();
+
+// onmessage is what the worker does when it receives a message from the page.
+self.onmessage = (event: MessageEvent<AudioMessage>) => {
+    queue = queue.then(() => transcribe(event.data));
 };

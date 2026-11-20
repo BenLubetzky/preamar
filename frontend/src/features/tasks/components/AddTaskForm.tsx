@@ -13,6 +13,11 @@ type Props = {
     onClose: () => void;
 }
 
+/** Puts two pieces of text together with a space between, skipping the space if either is empty. */
+function joinWords(first: string, second: string) {
+    return first && second ? first + " " + second : first + second;
+}
+
 /** Lets the user add a new task. */
 export function AddTaskForm({ onClose }: Props) {
     const createTask = useCreateTask();
@@ -20,6 +25,8 @@ export function AddTaskForm({ onClose }: Props) {
     const [description, setDescription] = useState("");
     const [duration, setDuration] = useState("");
     const [subtasks, setSubtasks] = useState<string[]>([]);
+    // The draft of what's being said right now; shown in the description but not saved.
+    const [liveText, setLiveText] = useState("");
 
     /** Sends the new task to the backend and empties the form on success. */
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -50,7 +57,7 @@ export function AddTaskForm({ onClose }: Props) {
 
     /** Adds spoken words to the end of the description, with a space between. */
     function addSpokenText(text: string) {
-        setDescription((prev) => (prev ? prev + " " + text : text));
+        setDescription((prev) => joinWords(prev, text));
     }
 
     return (
@@ -71,15 +78,18 @@ export function AddTaskForm({ onClose }: Props) {
                 <label htmlFor="new-task-description" className="block text-base tracking-wide text-muted">
                     Description
                 </label>
-                <MicButton onText={addSpokenText} />
+                <MicButton onText={addSpokenText} onLiveText={setLiveText} />
             </div>
+            {/* Shows the saved description plus the draft at its end. Locked while a draft shows,
+                so typing can't mix the draft into the saved text. */}
             <textarea
                 id="new-task-description"
                 className="field w-full resize-none px-1.5 py-1 leading-[18px]"
                 rows={3}
                 placeholder="The ones by the window"
-                value={description}
+                value={joinWords(description, liveText)}
                 onChange={(e) => setDescription(e.target.value)}
+                readOnly={liveText !== ""}
             />
 
             <NewSubtasksField titles={subtasks} onChange={setSubtasks} />
