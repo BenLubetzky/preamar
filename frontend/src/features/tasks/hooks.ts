@@ -2,7 +2,9 @@
 // The data lives in the shared query cache (src/core/query-provider.tsx) under the "tasks" key
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTask, getTasks, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation } from "./api";
+import {
+    createTask, getTasks, getTemplates, copyTask, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation,
+} from "./api";
 import type { TaskUpdate } from "./types";
 
 
@@ -15,6 +17,23 @@ export function useTasks() {
     // 1. queryKey - the name the data is saved under in the cache, like a label on a box.
     // 2. queryFn: the function that fetches the data when the box is empty or out of date
     return useQuery({ queryKey: TASKS_KEY, queryFn: getTasks });
+}
+
+
+/** Gets the user's templates (from the cache, or from the backend if needed). */
+export function useTemplates() {
+    // The key starts with TASKS_KEY, so every hook below that refreshes "tasks" refreshes this too.
+    return useQuery({ queryKey: [...TASKS_KEY, "templates"], queryFn: getTemplates });
+}
+
+
+/** Copies a template into a new normal task, then refreshes the task list. */
+export function useCopyTask() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: copyTask,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+    });
 }
 
 

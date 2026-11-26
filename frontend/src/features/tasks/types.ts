@@ -10,6 +10,7 @@ export type Task = {
     description: string | null;
     duration_minutes: number;
     done_at: string | null;
+    is_template: boolean;
     created_at: string;
     subtasks: Subtask[];
 };
@@ -20,11 +21,13 @@ export type TaskCreate = {
     description?: string | null;
     duration_minutes: number;
     subtasks?: string[];
+    is_template?: boolean;
 }
 
 /** What we send to edit a task: only the fields that changed (TaskUpdate). */
 // Omit removes a field from a type; Partial makes every remaining field optional.
 // & joins two types: the edited subtask list replaces the plain titles TaskCreate has.
-export type TaskUpdate = Partial<Omit<TaskCreate, "subtasks">> & {
+// is_template is left out too: it can only be set when the task is created.
+export type TaskUpdate = Partial<Omit<TaskCreate, "subtasks" | "is_template">> & {
     subtasks?: SubtaskDraft[];
 };

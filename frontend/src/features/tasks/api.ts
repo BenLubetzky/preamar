@@ -4,10 +4,22 @@
 import { apiFetch } from "@/core/api-client";
 import type { Task, TaskCreate, TaskUpdate } from "./types";
 
-/** Gets all the user's tasks, oldest first. */
+/** Gets the user's normal tasks (no templates), oldest first. */
 export function getTasks(){
     // Telling TypeScript that this call returns a list of tasks and can autocomplete fields
     return apiFetch<Task[]>("/tasks");
+}
+
+
+/** Gets the user's templates, oldest first. */
+export function getTemplates() {
+    return apiFetch<Task[]>("/tasks?templates=true");
+}
+
+
+/** Creates a new normal task copied from the given one (a template) and returns it. */
+export function copyTask(id: string) {
+    return apiFetch<Task>(`/tasks/${id}/copy`, { method: "POST" });
 }
 
 
