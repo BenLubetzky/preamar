@@ -29,6 +29,6 @@ Discussed one at a time, in this order:
 
 In order:
 
-1. **Mic for descriptions** (in progress): speak to add to a task's description. The Moonshine model runs in the user's browser via transformers.js (free, private, works in every modern browser). Chrome's Web Speech API was tried first and was too inaccurate.
-2. **Movable boxes**: drag the main screen's boxes around.
+1. **Mic for descriptions** (done?, to confirm): speak to add to a task's description. The Moonshine model runs in the user's browser via transformers.js (free, private, works in every modern browser). Chrome's Web Speech API was tried first and was too inaccurate.
+2. **Movable boxes** (done): drag the main screen's boxes around.
 3. **Instant updates**: change the screen right away (e.g. marking a task done) while the backend saves, instead of waiting for the refetch.

@@ -5,7 +5,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import {
     createTask, getTasks, getTemplates, copyTask, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation,
 } from "./api";
-import type { TaskUpdate } from "./types";
+import type { Task, TaskUpdate } from "./types";
 
 
 /** The cache key for the task list, shared by every hook that reads or refreshes it. */
@@ -62,13 +62,41 @@ export function useDeleteTask() {
 }
 
 
-/** Marks a task done or not done, then refreshes the task list. */
+/** Marks a task done or not done on screen right away, then saves it and refreshes the task list
+ * (putting the old list back if the save fails). */
 export function useSetTaskDone() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, done }: { id:string, done:boolean}) => 
+        mutationFn: ({ id, done }: { id:string, done:boolean}) =>
             done ? markTaskDone(id) : markTaskUndone(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY}),
+        // onMutate runs before mutationFn sends the request. What it returns is the "context",
+        // handed to onError and onSettled later.
+        onMutate: async ({ id, done }) => {
+            // Stop any refetch already in flight, so its older data can't land on top of the change below
+            await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+            const previous = queryClient.getQueryData<Task[]>(TASKS_KEY);
+            const now = new Date().toISOString();
+            // Same rules as the backend: done also ticks every subtask (keeping existing done times),
+            // not done only unticks the task itself.
+            queryClient.setQueryData<Task[]>(TASKS_KEY, (tasks) =>
+                tasks?.map((task) => {
+                    if (task.id !== id) return task;
+                    if (!done) return { ...task, done_at: null };
+                    return {
+                        ...task,
+                        done_at: task.done_at ?? now,
+                        subtasks: task.subtasks.map((s) => ({ ...s, done_at: s.done_at ?? now })),
+                    };
+                }),
+            );
+            return { previous };
+        },
+        // The save failed: put back the list from before the change
+        onError: (_error, _variables, context) => {
+            if (context?.previous) queryClient.setQueryData(TASKS_KEY, context.previous);
+        },
+        // Success or failure, fetch the real data so the screen matches the backend
+        onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     })
 }
 
