@@ -1,6 +1,6 @@
 "use client";
 
-// The form for adding a task: title, optional description and duration in minutes.
+// The form for adding a task: title, optional description, duration in minutes, and whether it's a template.
 // Saves through useCreateTask() in hooks.ts, which then refreshes the task list.
 
 import { useState, type FormEvent } from "react";
@@ -25,6 +25,7 @@ export function AddTaskForm({ onClose }: Props) {
     const [description, setDescription] = useState("");
     const [duration, setDuration] = useState("");
     const [subtasks, setSubtasks] = useState<string[]>([]);
+    const [asTemplate, setAsTemplate] = useState(false);
     // The draft of what's being said right now; shown in the description but not saved.
     const [liveText, setLiveText] = useState("");
 
@@ -38,6 +39,7 @@ export function AddTaskForm({ onClose }: Props) {
                 duration_minutes: Number(duration),
                 // Blank rows are dropped; the backend rejects empty titles
                 subtasks: subtasks.map((t) => t.trim()).filter((t) => t !== ""),
+                is_template: asTemplate,
             },
             {
                 onSuccess: () => {
@@ -115,6 +117,11 @@ export function AddTaskForm({ onClose }: Props) {
                 </button>
                 <span className="text-muted">min</span>
             </div>
+
+            <label className="mt-2.5 flex cursor-pointer items-center gap-2 text-base tracking-wide text-muted">
+                <input type="checkbox" checked={asTemplate} onChange={(e) => setAsTemplate(e.target.checked)} />
+                Save as template
+            </label>
 
             <div className="mt-3.5 mb-2.5 h-px bg-btn" />
             <div className="flex gap-2">
