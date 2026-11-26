@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTasks } from "../hooks";
+import { isUnsaved, useTasks } from "../hooks";
 import { DeleteTaskButton } from "./DeleteTaskButton";
 import { TaskDoneCheckbox } from "./TaskDoneCheckbox";
 import { EditTaskForm } from "./EditTaskForm";
@@ -26,7 +26,11 @@ export function TaskList() {
             <EditTaskForm task={task} onClose={() => setEditingId(null)} />
           </li>
         ) : (
-          <li key={task.id} className="px-1 py-1 text-[22px] leading-6">
+          // A task still waiting for its real id ignores clicks and is dimmed, so nothing is sent with the stand-in id
+          <li
+            key={task.id}
+            className={`px-1 py-1 text-[22px] leading-6 ${isUnsaved(task) ? "pointer-events-none opacity-60" : ""}`}
+          >
             <div className="flex items-center gap-2.5">
               <TaskDoneCheckbox task={task} />
               <span className={`min-w-0 flex-1 truncate ${task.done_at ? "text-dim line-through" : ""}`}>

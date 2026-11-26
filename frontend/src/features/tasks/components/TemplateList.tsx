@@ -4,7 +4,7 @@
 // or dragged onto the Tasks window (TemplateDropZone) to copy them in. The templates come from useTemplates() (hooks.ts).
 
 import { useState, type DragEvent } from "react";
-import { useTemplates } from "../hooks";
+import { isUnsaved, useTemplates } from "../hooks";
 import { DeleteTaskButton } from "./DeleteTaskButton";
 import { EditTaskForm } from "./EditTaskForm";
 
@@ -50,8 +50,11 @@ export function TemplateList() {
                             draggable
                             onDragStart={(e) => handleDragStart(e, template.id)}
                             onDragEnd={() => setDraggingId(null)}
-                            // group: lets the gold line below react to hovering the whole row (group-hover)
-                            className="group relative cursor-grab px-1 py-1 text-[22px] leading-6 active:cursor-grabbing"
+                            // group: lets the gold line below react to hovering the whole row (group-hover).
+                            // A template still waiting for its real id can't be clicked or dragged, and is dimmed.
+                            className={`group relative cursor-grab px-1 py-1 text-[22px] leading-6 active:cursor-grabbing ${
+                                isUnsaved(template) ? "pointer-events-none opacity-60" : ""
+                            }`}
                         >
                             <div className="flex items-center gap-2.5">
                                 <span className="min-w-0 flex-1 truncate">{template.title}</span>

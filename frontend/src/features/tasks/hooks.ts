@@ -5,11 +5,19 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import {
     createTask, getTasks, getTemplates, copyTask, deleteTask, markTaskDone, markTaskUndone, updateTask, getRecommendation,
 } from "./api";
-import type { Task, TaskUpdate } from "./types";
+import type { Task, TaskCreate, TaskUpdate } from "./types";
 
 
 /** The cache key for the task list, shared by every hook that reads or refreshes it. */
 export const TASKS_KEY = ["tasks"]
+
+/** The start of the stand-in ids given to new tasks and subtasks until the backend's real ones arrive. */
+const TEMP_ID_PREFIX = "temp-";
+
+/** Whether the task is still a stand-in the backend doesn't know yet, so its buttons must not send anything. */
+export function isUnsaved(task: Task) {
+    return task.id.startsWith(TEMP_ID_PREFIX);
+}
 
 /** Gets the user's task list (from the cache, or from the backend if needed). */
 export function useTasks() {
@@ -37,7 +45,8 @@ export function useCopyTask() {
 }
 
 
-/** Creates a task, then refreshes the task list. */
+/** Adds a task (or template) to the screen right away, then creates it and refreshes the lists
+ * (putting the old lists back if the create fails). */
 export function useCreateTask() {
     // useQueryClient gives you the shared QueryClient, which is the cache created in query-provider.tsx
     const queryClient = useQueryClient();
@@ -45,7 +54,37 @@ export function useCreateTask() {
     // useQuery is for reading.
     return useMutation({
         mutationFn: createTask,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+        onMutate: async (newTask: TaskCreate) => {
+            await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+            const previous = queryClient.getQueriesData<Task[]>({ queryKey: TASKS_KEY });
+            const now = new Date().toISOString();
+            // The backend makes the real ids; until the refetch brings them, the task uses a stand-in id
+            const tempId = `${TEMP_ID_PREFIX}${crypto.randomUUID()}`;
+            const optimistic: Task = {
+                id: tempId,
+                title: newTask.title,
+                description: newTask.description ?? null,
+                duration_minutes: newTask.duration_minutes,
+                done_at: null,
+                is_template: newTask.is_template ?? false,
+                created_at: now,
+                subtasks: (newTask.subtasks ?? []).map((title) => ({
+                    id: `${TEMP_ID_PREFIX}${crypto.randomUUID()}`,
+                    task_id: tempId,
+                    title,
+                    done_at: null,
+                    created_at: now,
+                })),
+            };
+            // A template goes at the end of the templates list, a normal task at the end of the task list (oldest first)
+            const key = optimistic.is_template ? [...TASKS_KEY, "templates"] : TASKS_KEY;
+            queryClient.setQueryData<Task[]>(key, (tasks) => (tasks ? [...tasks, optimistic] : tasks));
+            return { previous };
+        },
+        onError: (_error, _newTask, context) => {
+            context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+        },
+        onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     })
 }
 
@@ -116,12 +155,46 @@ export function useSetTaskDone() {
 }
 
 
-/** Saves changes to a task, then refreshes the task list. */
+/** Shows a task's (or template's) changes right away, then saves them and refreshes the lists
+ * (putting the old lists back if the save fails). */
 export function useUpdateTask() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, changes }: { id: string; changes: TaskUpdate }) => updateTask(id, changes),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY}),
+        onMutate: async ({ id, changes }) => {
+            await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+            const previous = queryClient.getQueriesData<Task[]>({ queryKey: TASKS_KEY });
+            const now = new Date().toISOString();
+            // Splits the sent subtask list off from the plain fields (title, description, duration)
+            const { subtasks: drafts, ...fields } = changes;
+            queryClient.setQueriesData<Task[]>({ queryKey: TASKS_KEY }, (tasks) =>
+                tasks?.map((task) => {
+                    if (task.id !== id) return task;
+                    return {
+                        ...task,
+                        ...fields,
+                        // Same rule as the backend: a draft with a known id keeps that subtask (and its done state)
+                        // with the new title; anything else is a new subtask, not done.
+                        subtasks: drafts === undefined ? task.subtasks : drafts.map((draft) => {
+                            const existing = task.subtasks.find((s) => s.id === draft.id);
+                            if (existing) return { ...existing, title: draft.title };
+                            return {
+                                id: `${TEMP_ID_PREFIX}${crypto.randomUUID()}`,
+                                task_id: id,
+                                title: draft.title,
+                                done_at: null,
+                                created_at: now,
+                            };
+                        }),
+                    };
+                }),
+            );
+            return { previous };
+        },
+        onError: (_error, _variables, context) => {
+            context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+        },
+        onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     });
 }
 

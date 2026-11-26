@@ -1,7 +1,8 @@
 "use client";
 
 // The form for editing one task, opened from the task list with the task's current values.
-// Saves the task and its subtasks together through useUpdateTask() in hooks.ts, which then refreshes the task list.
+// Saves the task and its subtasks together through useUpdateTask() in hooks.ts, which shows the changes right away,
+// then refreshes the task list. The form closes as soon as you save.
 
 import { useState, type FormEvent } from "react";
 import { useUpdateTask } from "../hooks";
@@ -20,7 +21,7 @@ export function EditTaskForm({ task, onClose }: { task:Task, onClose: () => void
         task.subtasks.map((s) => ({ id: s.id, title: s.title })),
     );
 
-    /** Sends the changes to the backend and closes the form on success */
+    /** Sends the changes and closes the form right away; the list already shows them (useUpdateTask) */
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         updateTask.mutate(
@@ -36,8 +37,8 @@ export function EditTaskForm({ task, onClose }: { task:Task, onClose: () => void
                         .filter((s) => s.title !== ""),
                 },
             },
-            { onSuccess: onClose },
         );
+        onClose();
     }
 
     return (
@@ -64,18 +65,13 @@ export function EditTaskForm({ task, onClose }: { task:Task, onClose: () => void
                 required
             />
             <div className="flex gap-3">
-                <button
-                    type="submit"
-                    disabled={updateTask.isPending}
-                    className="btn h-7 px-3"
-                >
-                    {updateTask.isPending ? "Saving..." : "Save"}
+                <button type="submit" className="btn h-7 px-3">
+                    Save
                 </button>
                 <button type="button" onClick={onClose} className="btn-ghost h-7 px-3">
                     Cancel
                 </button>
             </div>
-            {updateTask.isError && <p className="text-red-400">Couldn&apos;t save the task.</p>}
         </form>
     )
 }
