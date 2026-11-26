@@ -4,6 +4,7 @@
 // The subtasks come from the parent task; ticking saves through useSetSubtaskDone() in subtasks/hooks.ts.
 
 import { useSetSubtaskDone } from "../hooks";
+import { isTempId } from "@/features/tasks/hooks";
 import type { Subtask } from "../types";
 
 type Props = {
@@ -23,7 +24,8 @@ export function SubtaskList({ subtasks }: Props) {
                         type="checkbox"
                         checked={subtask.done_at !== null}
                         onChange={(e) => setSubtaskDone.mutate({ id: subtask.id, done: e.target.checked })}
-                        disabled={setSubtaskDone.isPending}
+                        // Only off while the subtask still has a stand-in id (just added in an edit)
+                        disabled={isTempId(subtask.id)}
                         aria-label={`Mark "${subtask.title}" done`}
                         className="size-3.5 shrink-0 cursor-pointer appearance-none border border-muted checked:border-accent checked:bg-accent disabled:opacity-50"
                     />

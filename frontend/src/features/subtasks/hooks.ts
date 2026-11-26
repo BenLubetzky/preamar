@@ -3,6 +3,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TASKS_KEY } from "@/features/tasks/hooks";
+import type { Task } from "@/features/tasks/types";
 import { createSubtask, deleteSubtask, markSubtaskDone, markSubtaskUndone, updateSubtask } from "./api";
 
 /** Adds a subtask to a task then refreshes the task list. */
@@ -37,12 +38,36 @@ export function useDeleteSubtask() {
 }
 
 
-/** Marks a subtask done or not done, then refreshes the task list (the parent may have changed too). */
+/** Ticks or unticks a subtask (and its parent task, if that changes) on screen right away, then saves it and
+ * refreshes the task list (putting the old lists back if the save fails). */
 export function useSetSubtaskDone() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, done }: {id: string, done: boolean}) =>
             done ? markSubtaskDone(id) : markSubtaskUndone(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY })
+        onMutate: async ({ id, done }) => {
+            await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+            const previous = queryClient.getQueriesData<Task[]>({ queryKey: TASKS_KEY });
+            const now = new Date().toISOString();
+            // Every list under TASKS_KEY, since the same task can show in the task list and in What fits
+            queryClient.setQueriesData<Task[]>({ queryKey: TASKS_KEY }, (tasks) =>
+                tasks?.map((task) => {
+                    // A template's subtasks can't be ticked, so a template is left exactly as it is
+                    if (task.is_template) return task;
+                    if (!task.subtasks.some((s) => s.id === id)) return task;
+                    const subtasks = task.subtasks.map((s) =>
+                        s.id !== id ? s : { ...s, done_at: done ? (s.done_at ?? now) : null },
+                    );
+                    // Same rule as the backend (sync_task_done): the task is done exactly when all its subtasks are
+                    const allDone = subtasks.every((s) => s.done_at !== null);
+                    return { ...task, subtasks, done_at: allDone ? (task.done_at ?? now) : null };
+                }),
+            );
+            return { previous };
+        },
+        onError: (_error, _variables, context) => {
+            context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+        },
+        onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     })
 }

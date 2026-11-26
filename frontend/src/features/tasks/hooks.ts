@@ -14,9 +14,14 @@ export const TASKS_KEY = ["tasks"]
 /** The start of the stand-in ids given to new tasks and subtasks until the backend's real ones arrive. */
 const TEMP_ID_PREFIX = "temp-";
 
+/** Whether the id is a stand-in (a task's or a subtask's) that the backend doesn't know yet. */
+export function isTempId(id: string) {
+    return id.startsWith(TEMP_ID_PREFIX);
+}
+
 /** Whether the task is still a stand-in the backend doesn't know yet, so its buttons must not send anything. */
 export function isUnsaved(task: Task) {
-    return task.id.startsWith(TEMP_ID_PREFIX);
+    return isTempId(task.id);
 }
 
 /** Gets the user's task list (from the cache, or from the backend if needed). */
