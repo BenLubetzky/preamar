@@ -50,14 +50,29 @@ export function useCreateTask() {
 }
 
 
-/** Deletes a task, then refreshes the task list. */
+/** Removes a task (or template) from the screen right away, then deletes it and refreshes the lists
+ * (putting the old lists back if the delete fails). */
 export function useDeleteTask() {
     const queryClient = useQueryClient();
     // queryClient.invalidateQueries tells the cache that the data under a key is out of date.
     // If a component on screen is using that key, TanStack Query fetches it from the backend again right away.
     return useMutation({
         mutationFn: deleteTask,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
+        onMutate: async (id: string) => {
+            await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+            // The "Queries" (plural) versions work on every cached list whose key starts with TASKS_KEY:
+            // the task list, the templates and any recommendation. getQueriesData returns [key, data] pairs.
+            const previous = queryClient.getQueriesData<Task[]>({ queryKey: TASKS_KEY });
+            queryClient.setQueriesData<Task[]>({ queryKey: TASKS_KEY }, (tasks) =>
+                tasks?.filter((task) => task.id !== id),
+            );
+            return { previous };
+        },
+        // The delete failed: put every list back the way it was
+        onError: (_error, _id, context) => {
+            context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+        },
+        onSettled: () => queryClient.invalidateQueries({ queryKey: TASKS_KEY }),
     });
 }
 
