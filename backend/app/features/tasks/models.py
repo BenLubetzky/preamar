@@ -1,10 +1,10 @@
-# The tasks table: one row per task a user created
+# The tasks table: one row per task a user created, normal tasks and templates (is_template)
 # Each row belongs to a user through user_id (points at the users table)
 
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import DateTime, ForeignKey, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 
@@ -24,6 +24,9 @@ class Task(Base):
     description:Mapped[str | None]
     duration_minutes:Mapped[int]
     done_at:Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # A template is never done; it's only copied into new normal tasks.
+    # server_default fills in false for the rows that already exist when the column is added.
+    is_template:Mapped[bool] = mapped_column(default=False, server_default=false())
     created_at:Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     subtasks: Mapped[list["Subtask"]] = relationship(
         order_by="Subtask.created_at", cascade="all, delete-orphan", passive_deletes=True
