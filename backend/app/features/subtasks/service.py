@@ -17,6 +17,9 @@ def sync_task_done(task_id: uuid.UUID, db: Session) -> None:
     if not done_times:
         return
     task = db.get(Task, task_id)
+    # A template is never done, whatever its subtasks say
+    if task.is_template:
+        return
     if all(done_at is not None for done_at in done_times):
         # Keep the original done time if it was already done
         if task.done_at is None:

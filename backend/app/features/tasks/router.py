@@ -22,12 +22,18 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("")
 def list_tasks(
+    templates: bool = False,
     user_id: uuid.UUID = Depends(get_current_user_id),
     db: Session = Depends(get_db)
 ) -> list[TaskRead]:
-    """List the logged-in user's tasks, oldest first"""
+    """List the logged-in user's normal tasks, or their templates with ?templates=true, oldest first"""
     # selectinload fetches all the subtasks for all the tasks in one extra query.
-    query = select(Task).where(Task.user_id == user_id).options(selectinload(Task.subtasks)).order_by(Task.created_at)
+    query = (
+        select(Task)
+        .where(Task.user_id == user_id, Task.is_template.is_(templates))
+        .options(selectinload(Task.subtasks))
+        .order_by(Task.created_at)
+    )
     tasks = db.scalars(query).all()
 
     return [TaskRead.model_validate(task) for task in tasks]
@@ -56,6 +62,29 @@ def get_own_task(task_id:uuid.UUID, user_id:uuid.UUID, db:Session) -> Task:
     if task is None or task.user_id != user_id:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@router.post("/{task_id}/copy", status_code=201)
+def copy_task(
+    task_id: uuid.UUID,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> TaskRead:
+    """Create a new normal task with the same title, description, duration and subtask titles as one of the
+    logged in user's tasks (used to copy a template)"""
+    source = get_own_task(task_id, user_id, db)
+    task = Task(
+        user_id=user_id,
+        title=source.title,
+        description=source.description,
+        duration_minutes=source.duration_minutes,
+    )
+    # Only the titles are copied, so every new subtask starts not done
+    task.subtasks = [Subtask(title=subtask.title) for subtask in source.subtasks]
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return TaskRead.model_validate(task)
+
 
 # PATCH VS PUT: PATCH cchanges part of a resource, PUT replaces all of it. Since we change
 # only what's sent we're using PATCH
@@ -112,6 +141,8 @@ def mark_task_done(
 ) -> TaskRead:
     """Mark one of the logged in user's tasks as done"""
     task = get_own_task(task_id, user_id, db)
+    if task.is_template:
+        raise HTTPException(status_code=400, detail="A template can't be marked done")
     now = datetime.now(timezone.utc)
     for subtask in task.subtasks:
         if subtask.done_at is None:
@@ -147,8 +178,9 @@ def recommend_tasks(
 ) -> list[TaskRead]:
     """Recommend which of the logged in user's unfinished tasks to do in the given free time,
     leaving out the skipped ones."""
-    query = select(Task).where(Task.user_id == user_id, 
+    query = select(Task).where(Task.user_id == user_id,
                                Task.done_at.is_(None),
+                               Task.is_template.is_(False),
                                Task.id.not_in(skip),).options(selectinload(Task.subtasks))
     tasks = db.scalars(query).all()
     chosen = recommend(list(tasks), minutes)

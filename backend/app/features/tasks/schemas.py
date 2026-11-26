@@ -17,6 +17,8 @@ class TaskCreate(BaseModel):
     # gt = greater than
     duration_minutes: int = Field(gt=0)
     subtasks: list[Annotated[str, Field(min_length=1)]] = []
+    # Only set when creating: a task can't be turned into a template later (TaskUpdate has no is_template)
+    is_template: bool = False
 
 class TaskRead(BaseModel):
     # What the API sends back for one task. user_id is left out on purpose since the frontend knows already 
@@ -31,6 +33,7 @@ class TaskRead(BaseModel):
     description: str | None
     duration_minutes: int
     done_at: datetime | None
+    is_template: bool
     created_at: datetime
     subtasks: list[SubtaskRead]
 
