@@ -1,6 +1,6 @@
 "use client";
 
-// The main screen's three boxes: recommendations (left), tasks (center), new task (right).
+// The main screen's three draggable windows: recommendations (left), tasks (center), new task (right).
 // It only places existing components; each one fetches its own data through hooks.ts.
 // Holds the free minutes given by the user. The center box is always present,
 // the recommendation opens after minutes state is updated to a number, the add task box opens by clicking the button "+ Add new task"
@@ -11,6 +11,7 @@ import { RecommendationPanel } from "./RecommendationPanel";
 import { TaskList } from "./TaskList";
 import { AddTaskForm } from "./AddTaskForm";
 import { FreeTimeInput } from "./FreeTimeInput";
+import { DraggableWindow } from "@/features/windows/DraggableWindow";
 
 /** Lays out the left, center and right boxes of the main screen. */
 export function HomeLayout() {
@@ -23,26 +24,15 @@ export function HomeLayout() {
 
         <div className="mt-6 grid grid-cols-[19rem_26rem_19rem] items-start justify-center gap-6">
             {minutes != null ? (
-                <section className="panel">
-                    <div className="flex items-center justify-between text-2xl text-accent">
-                        <h2>What fits</h2>
-                        <button
-                            type="button"
-                            aria-label="Close"
-                            className="cursor-pointer px-1 text-2xl text-dim hover:text-muted"
-                            onClick={() => setMinutes(null)}
-                        >
-                            ×
-                        </button>
-                    </div>
+                <DraggableWindow title="What fits" onClose={() => setMinutes(null)}>
                     <RecommendationPanel key={minutes} minutes={minutes}/>
-                </section>
+                </DraggableWindow>
             ) : (
                 <div />
             )}
 
-            <section className="panel">
-                <div className="-mt-1 flex justify-end">
+            <DraggableWindow title="Tasks">
+                <div className="flex justify-end">
                     <LogoutButton />
                 </div>
                 <FreeTimeInput onSubmit={setMinutes}/>
@@ -51,22 +41,11 @@ export function HomeLayout() {
                 <button type="button" className="btn mt-3 h-10 w-full text-2xl" onClick={() => setShowAdd(true)}>
                     + Add new task
                 </button>
-            </section>
+            </DraggableWindow>
             { showAdd ? (
-                <section className="panel">
-                    <div className="flex items-center justify-between text-2xl text-accent">
-                        <h2>New task</h2>
-                        <button
-                            type="button"
-                            aria-label="Close"
-                            className="cursor-pointer px-1 text-2xl text-dim hover:text-muted"
-                            onClick={() => setShowAdd(false)}
-                        >
-                            ×
-                        </button>
-                    </div>
+                <DraggableWindow title="New task" onClose={() => setShowAdd(false)}>
                     <AddTaskForm onClose={() => setShowAdd(false)} />
-                </section>
+                </DraggableWindow>
             ) : (
                 <div />
             )}
