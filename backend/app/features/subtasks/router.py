@@ -83,6 +83,8 @@ def mark_subtask_done(
 ) -> SubtaskRead:
     """Mark one of the logged in user's subtasks as done, and its task too if it was the last open subtask"""
     subtask = get_own_subtask(subtask_id, user_id, db)
+    if db.get(Task, subtask.task_id).is_template:
+        raise HTTPException(status_code=400, detail="A template's subtask can't be marked done")
     if subtask.done_at is None:
         subtask.done_at = datetime.now(timezone.utc)
     sync_task_done(subtask.task_id, db)
