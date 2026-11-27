@@ -1,7 +1,8 @@
 "use client";
 
 // One movable window on the main screen: a panel whose title bar you drag to move it, with an optional × close button.
-// Holds only its own drag offset in local state; it fetches no data, its content comes in as children.
+// Holds only its own drag offset and stacking order in local state; it fetches no data, its content comes in as children.
+// Clicking anywhere on a window brings it in front of the others.
 
 import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 
@@ -13,10 +14,23 @@ type Props = {
 
 type DragStart = { mouseX: number; mouseY: number; x: number; y: number };
 
+// The highest z-index handed out so far. It lives outside the component, so it's one number shared by
+// every window (each window's own useState would only know about itself).
+let topZ = 0;
+
 /** A panel that can be moved around by dragging its title bar. */
 export function DraggableWindow({ title, onClose, children }: Props) {
     const [offset, setOffset] = useState({ x: 0, y: 0 });
+    // z-index: which window is drawn on top when they overlap; the bigger number wins
+    const [z, setZ] = useState(0);
     const dragStart = useRef<DragStart | null>(null);
+
+    /** Puts this window in front of all the others, unless it already is. */
+    function bringToFront() {
+        if (z === topZ && z !== 0) return;
+        topZ += 1;
+        setZ(topZ);
+    }
 
     /** Starts a drag: remembers where the mouse and the window were. */
     function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
@@ -43,7 +57,13 @@ export function DraggableWindow({ title, onClose, children }: Props) {
     }
 
     return (
-        <section className="panel" style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}>
+        // relative: z-index only works on positioned elements. onPointerDownCapture: runs before any child
+        // handles the press (the "capture" phase), so a click on a button or input still brings the window up
+        <section
+            className="panel relative"
+            style={{ transform: `translate(${offset.x}px, ${offset.y}px)`, zIndex: z }}
+            onPointerDownCapture={bringToFront}
+        >
             <div
                 className="flex cursor-grab touch-none select-none items-center justify-between text-2xl text-accent active:cursor-grabbing"
                 onPointerDown={handlePointerDown}
