@@ -11,7 +11,8 @@ You tell the app how much free time you have, and it tells you which of your tas
 
 ## After the MVP
 
-- **Countdown timer:** a timer for the free time, with Start and Pause.
+- **Countdown timer:** a timer for the free time, with Start and Pause. It keeps counting below zero (turns red) instead of stopping, so running a little over is fine.
+- **Per-task timer:** in the one-task view, each task gets its own small timer for its minutes, next to the task. Amber while there's time left, red below zero. It pauses with the main timer and starts again for each task.
 - **Skip a task:** leave a task out of the current recommendation without marking it done. Skips last until the Refresh button or a page reload.
 - **Auto-delete done tasks:** a pg_cron job in the database runs every hour and deletes tasks marked done more than 24 hours ago.
 
@@ -31,4 +32,8 @@ In order:
 
 1. **Mic for descriptions** (done?, to confirm): speak to add to a task's description. The Moonshine model runs in the user's browser via transformers.js (free, private, works in every modern browser). Chrome's Web Speech API was tried first and was too inaccurate.
 2. **Movable boxes** (done): drag the main screen's boxes around.
+   - **Layout:** recommendation panel on the left, Tasks in the center, New task on the right with Templates under it (Templates moves to the top when New task is closed).
+   - **Front window:** clicking or grabbing a window brings it in front of the others.
+   - **Top-right bar:** always on top. A two-windows icon puts every window back in its default place (only the position changes), plus log out.
+   - **Scrolling lists:** subtasks (in New task and Edit task) scroll after 3 rows, templates after 4. The scrollbar is hidden; a small down arrow shows there's more, and a newly added subtask scrolls into view.
 3. **Instant updates** (done): change the screen right away (e.g. marking a task done) while the backend saves, instead of waiting for the refetch.
