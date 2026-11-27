@@ -9,7 +9,7 @@ import { useAuth } from "@/core/auth-context";
 export function LogoutButton(){
     const { signOut } = useAuth();
     return (
-        <button type="button" onClick={signOut} className="cursor-pointer text-base text-dim hover:text-muted">
+        <button type="button" onClick={signOut} className="cursor-pointer text-xl text-accent hover:text-ink">
             log out
         </button>
     )
