@@ -3,6 +3,8 @@
 // The "Subtasks" section of the new-task form: a list of title inputs plus an "Add a new subtask" button.
 // Holds no state itself; the titles live in AddTaskForm and are sent with the task on Save.
 
+import { SubtaskRows } from "./SubtaskRows";
+
 type Props = {
     /** The subtask titles typed so far. */
     titles: string[];
@@ -25,7 +27,7 @@ export function NewSubtasksField({ titles, onChange }: Props) {
     return (
         <div>
             <p className="mt-2.5 mb-1 text-base tracking-wide text-muted">Subtasks</p>
-            <ul className="space-y-1">
+            <SubtaskRows rowCount={titles.length} onAdd={() => onChange([...titles, ""])}>
                 {titles.map((title, index) => (
                     <li key={index} className="flex items-center gap-1.5">
                         <input
@@ -45,10 +47,7 @@ export function NewSubtasksField({ titles, onChange }: Props) {
                         </button>
                     </li>
                 ))}
-            </ul>
-            <button type="button" className="btn-ghost mt-1.5 h-6 px-2 text-base" onClick={() => onChange([...titles, ""])}>
-                + Add a new subtask
-            </button>
+            </SubtaskRows>
         </div>
     );
 }

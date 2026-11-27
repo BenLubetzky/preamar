@@ -4,6 +4,7 @@
 // Holds no state itself; the rows live in EditTaskForm, which sends the whole list on Save.
 
 import type { SubtaskDraft } from "../types";
+import { SubtaskRows } from "./SubtaskRows";
 
 type Props = {
     /** The subtask rows in the form (saved ones carry an id, newly added ones don't). */
@@ -27,7 +28,7 @@ export function EditSubtasksField({ subtasks, onChange }: Props) {
     return (
         <div>
             <p className="mt-2.5 mb-1 text-base tracking-wide text-muted">Subtasks</p>
-            <ul className="space-y-1">
+            <SubtaskRows rowCount={subtasks.length} onAdd={() => onChange([...subtasks, { title: "" }])}>
                 {subtasks.map((subtask, index) => (
                     // Saved rows are keyed by their id; new rows have none yet, so they use their position
                     <li key={subtask.id ?? `new-${index}`} className="flex items-center gap-1.5">
@@ -48,14 +49,7 @@ export function EditSubtasksField({ subtasks, onChange }: Props) {
                         </button>
                     </li>
                 ))}
-            </ul>
-            <button
-                type="button"
-                className="btn-ghost mt-1.5 h-6 px-2 text-base"
-                onClick={() => onChange([...subtasks, { title: "" }])}
-            >
-                + Add a new subtask
-            </button>
+            </SubtaskRows>
         </div>
     );
 }
