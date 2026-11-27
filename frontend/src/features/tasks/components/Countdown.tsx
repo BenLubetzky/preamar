@@ -1,14 +1,17 @@
 "use client";
 
-// A countdown for the free time - starts on "Start", can pause, stop at 0.
+// A countdown for the free time - starts on "Start", can pause, keeps going below 0 (turns red).
 // The minutes come from RecommendationPanel.tsx; nothing here talks to the backend
 
 import { useEffect, useState } from "react";
 
+/** Turns seconds into "m:ss", with a leading "-" when below zero (e.g. -65 → "-1:05"). */
 function formatTime(totalSeconds: number) {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `${minutes}:${seconds}`;
+    const sign = totalSeconds < 0 ? "-" : "";
+    const abs = Math.abs(totalSeconds);
+    const minutes = Math.floor(abs / 60);
+    const seconds = String(abs % 60).padStart(2, "0");
+    return `${sign}${minutes}:${seconds}`;
 }
 
 type Props = {
@@ -22,37 +25,35 @@ type Props = {
 export function Countdown({ minutes, onStart }: Props) {
     const [secondsLeft, setSecondsLeft] =  useState(minutes * 60);
     const [running, setRunning] = useState(false);
-    const finished = secondsLeft === 0;
+    const overtime = secondsLeft < 0;
 
     useEffect(() => {
-        if (!running || finished) return;
+        if (!running) return;
         // setInterval is a function build into the browser that runs some code over and over with a fixed
         // wait time between runs
         const id = setInterval(() => {
             setSecondsLeft((s) => s - 1);
         }, 1000);
         return () => clearInterval(id);
-    }, [running, finished]);
+    }, [running]);
 
     return (
         <div className="mt-3 flex items-center gap-3">
-            <span className="text-3xl leading-none text-accent">{formatTime(secondsLeft)}</span>
-            {finished ? (
-                <span className="text-soft">Time&apos;s up!</span>
-            ) : (
-                <button
-                    type="button"
-                    className="btn flex size-8 items-center justify-center"
-                    title={running ? "Pause" : "Start"}
-                    aria-label={running ? "Pause" : "Start"}
-                    onClick={() => {
-                        if (!running) onStart?.();
-                        setRunning(!running);
-                    }}
-                >
-                    {running ? <PauseIcon /> : <PlayIcon />}
-                </button>
-            )}
+            <span className={`text-3xl leading-none ${overtime ? "text-red-400" : "text-accent"}`}>
+                {formatTime(secondsLeft)}
+            </span>
+            <button
+                type="button"
+                className="btn flex size-8 items-center justify-center"
+                title={running ? "Pause" : "Start"}
+                aria-label={running ? "Pause" : "Start"}
+                onClick={() => {
+                    if (!running) onStart?.();
+                    setRunning(!running);
+                }}
+            >
+                {running ? <PauseIcon /> : <PlayIcon />}
+            </button>
         </div>
     );
 }
