@@ -3,16 +3,7 @@
 // A countdown for the free time - keeps going below 0 (turns red), with the play/pause button.
 // The minutes and running/paused come from RecommendationPanel.tsx; nothing here talks to the backend
 
-import { useEffect, useState } from "react";
-
-/** Turns seconds into "m:ss", with a leading "-" when below zero (e.g. -65 → "-1:05"). */
-function formatTime(totalSeconds: number) {
-    const sign = totalSeconds < 0 ? "-" : "";
-    const abs = Math.abs(totalSeconds);
-    const minutes = Math.floor(abs / 60);
-    const seconds = String(abs % 60).padStart(2, "0");
-    return `${sign}${minutes}:${seconds}`;
-}
+import { formatTime, useCountdown } from "../timer";
 
 type Props = {
     /** Minutes to count down */
@@ -25,18 +16,8 @@ type Props = {
 
 /** Counts down the given minutes while `running` is true. */
 export function Countdown({ minutes, running, onToggle }: Props) {
-    const [secondsLeft, setSecondsLeft] =  useState(minutes * 60);
+    const secondsLeft = useCountdown(minutes, running);
     const overtime = secondsLeft < 0;
-
-    useEffect(() => {
-        if (!running) return;
-        // setInterval is a function build into the browser that runs some code over and over with a fixed
-        // wait time between runs
-        const id = setInterval(() => {
-            setSecondsLeft((s) => s - 1);
-        }, 1000);
-        return () => clearInterval(id);
-    }, [running]);
 
     return (
         <div className="mt-3 flex items-center gap-3">

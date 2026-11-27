@@ -6,6 +6,7 @@
 import { useSetTaskDone } from "../hooks";
 import type { Task } from "../types";
 import { SubtaskList } from "@/features/subtasks/components/SubtaskList";
+import { TaskTimer } from "./TaskTimer";
 
 type Props = {
     /** The task to show. */
@@ -16,10 +17,12 @@ type Props = {
     count: number;
     /** Called once the task is saved as done, to move to the next one. */
     onDone: () => void;
+    /** Whether the timers are ticking, so the task timer pauses with the main one. */
+    running: boolean;
 };
 
-/** Shows the single task to work on now, with a Done button. */
-export function FocusTask({ task, position, count, onDone }: Props) {
+/** Shows the single task to work on now, with its own timer and a Done button. */
+export function FocusTask({ task, position, count, onDone, running }: Props) {
     const setTaskDone = useSetTaskDone();
 
     return (
@@ -27,7 +30,12 @@ export function FocusTask({ task, position, count, onDone }: Props) {
             <p className="mt-1.5 text-base text-muted">Task {position} of {count}</p>
             <div className="mt-1 flex items-baseline justify-between gap-2">
                 <h3 className="min-w-0 break-words text-2xl text-ink">{task.title}</h3>
-                <span className="shrink-0 text-muted">{task.duration_minutes} min</span>
+                {/* Grouped so justify-between keeps them together on the right */}
+                <div className="flex shrink-0 items-baseline gap-2">
+                    <span className="text-muted">{task.duration_minutes} min</span>
+                    {/* Resets per task for free: the parent gives FocusTask key={task.id} */}
+                    <TaskTimer minutes={task.duration_minutes} running={running} />
+                </div>
             </div>
             <p className="mt-1 text-base leading-[18px] text-soft">
                 {task.description ?? "No description."}

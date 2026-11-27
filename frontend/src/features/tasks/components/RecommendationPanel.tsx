@@ -65,6 +65,7 @@ export function RecommendationPanel({ minutes }: Props) {
                         position={current + 1}
                         count = {focusTasks.length}
                         onDone={() => setCurrent(current + 1)}
+                        running={running}
                     />
                 ) : (
                     <p className="mt-1.5 text-xl text-soft">All done! Nice work.</p>
