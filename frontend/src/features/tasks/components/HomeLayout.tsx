@@ -1,6 +1,6 @@
 "use client";
 
-// The main screen's draggable windows: recommendations and templates (left), tasks (center), new task (right).
+// The main screen's draggable windows: recommendations (left), tasks (center), new task above templates (right).
 // It only places existing components; each one fetches its own data through hooks.ts.
 // Holds the free minutes given by the user. The center box is always present,
 // the recommendation opens after minutes state is updated to a number, the add task box opens by clicking the button "+ Add new task", the templates box by the small "templates" button
@@ -26,20 +26,12 @@ export function HomeLayout() {
         <h1 className="text-4xl text-accent">preamar</h1>
 
         <div className="mt-6 grid grid-cols-[19rem_26rem_19rem] items-start justify-center gap-6">
-            {/* The left column: What fits sits in the normal flow; Templates is absolute (taken out of the flow)
-                at the column's top, so no other window's height can push it */}
-            <div className="relative">
+            {/* The left column: just the recommendation panel */}
+            <div>
                 {minutes != null && (
                     <DraggableWindow title="What fits" onClose={() => setMinutes(null)}>
                         <RecommendationPanel key={minutes} minutes={minutes}/>
                     </DraggableWindow>
-                )}
-                {showTemplates && (
-                    <div className="absolute inset-x-0 top-0">
-                        <DraggableWindow title="Templates" onClose={() => setShowTemplates(false)}>
-                            <TemplateList />
-                        </DraggableWindow>
-                    </div>
                 )}
             </div>
 
@@ -64,13 +56,20 @@ export function HomeLayout() {
                 </TemplateDropZone>
             </DraggableWindow>
 
-            {showAdd ? (
-                <DraggableWindow title="New task" onClose={() => setShowAdd(false)}>
-                    <AddTaskForm onClose={() => setShowAdd(false)} />
-                </DraggableWindow>
-            ) : (
-                <div />
-            )}
+            {/* The right column: New task on top, Templates under it. Both are in the normal flow,
+                so with New task closed, Templates moves up to the top */}
+            <div className="flex flex-col gap-6">
+                {showAdd && (
+                    <DraggableWindow title="New task" onClose={() => setShowAdd(false)}>
+                        <AddTaskForm onClose={() => setShowAdd(false)} />
+                    </DraggableWindow>
+                )}
+                {showTemplates && (
+                    <DraggableWindow title="Templates" onClose={() => setShowTemplates(false)}>
+                        <TemplateList />
+                    </DraggableWindow>
+                )}
+            </div>
         </div>
       </div>  
     );
