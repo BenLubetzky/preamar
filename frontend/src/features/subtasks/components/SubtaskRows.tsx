@@ -62,8 +62,8 @@ export function SubtaskRows({ rowCount, onAdd, children }: Props) {
     );
 }
 
-/** A 5×3 pixel arrow pointing down, in the same style as the play/pause icons. */
-function DownArrow() {
+/** A 5×3 pixel arrow pointing down, in the same style as the play/pause icons. Also used by TemplateList. */
+export function DownArrow() {
     return (
         <svg width="10" height="6" viewBox="0 0 5 3" shapeRendering="crispEdges" aria-hidden="true">
             <rect x="0" y="0" width="5" height="1" fill="#9A8A6A" />
