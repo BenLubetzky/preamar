@@ -1,7 +1,7 @@
 "use client";
 
-// A countdown for the free time - starts on "Start", can pause, keeps going below 0 (turns red).
-// The minutes come from RecommendationPanel.tsx; nothing here talks to the backend
+// A countdown for the free time - keeps going below 0 (turns red), with the play/pause button.
+// The minutes and running/paused come from RecommendationPanel.tsx; nothing here talks to the backend
 
 import { useEffect, useState } from "react";
 
@@ -17,14 +17,15 @@ function formatTime(totalSeconds: number) {
 type Props = {
     /** Minutes to count down */
     minutes: number,
-    /** Function from the parent to see if start was pressed */
-    onStart: () => void,
+    /** Whether the timer is ticking (owned by the parent, so the task timer can share it). */
+    running: boolean,
+    /** Called when play/pause is pressed; the parent flips `running`. */
+    onToggle: () => void,
 }
 
-/** Counts down the given minutes once the user presses Start. */
-export function Countdown({ minutes, onStart }: Props) {
+/** Counts down the given minutes while `running` is true. */
+export function Countdown({ minutes, running, onToggle }: Props) {
     const [secondsLeft, setSecondsLeft] =  useState(minutes * 60);
-    const [running, setRunning] = useState(false);
     const overtime = secondsLeft < 0;
 
     useEffect(() => {
@@ -47,10 +48,7 @@ export function Countdown({ minutes, onStart }: Props) {
                 className="btn flex size-8 items-center justify-center"
                 title={running ? "Pause" : "Start"}
                 aria-label={running ? "Pause" : "Start"}
-                onClick={() => {
-                    if (!running) onStart?.();
-                    setRunning(!running);
-                }}
+                onClick={onToggle}
             >
                 {running ? <PauseIcon /> : <PlayIcon />}
             </button>

@@ -20,6 +20,8 @@ export function RecommendationPanel({ minutes }: Props) {
     const [openIds, setOpenIds] = useState<string[]>([]);
     const [focusTasks, setFocusTasks] = useState<Task[] | null>(null);
     const [current, setCurrent] = useState(0);
+    // Lives here (not in Countdown) so the main timer and the task timer pause together
+    const [running, setRunning] = useState(false);
     const { data: tasks, isPending, isError } = useRecommendation(minutes, skipped);
     // The live task list, so the one-task view shows fresh subtask ticks instead of the frozen copy
     const { data: allTasks } = useTasks();
@@ -37,6 +39,12 @@ export function RecommendationPanel({ minutes }: Props) {
     /** On the first Start, freezes the current list of tasks. */
     function startFocus() {
         if (focusTasks === null && tasks) setFocusTasks(tasks);
+    }
+
+    /** Play/pause for both timers; pressing play also enters the one-task view. */
+    function toggleRunning() {
+        if (!running) startFocus();
+        setRunning(!running);
     }
 
     if (minutes == null) return null;
@@ -61,7 +69,7 @@ export function RecommendationPanel({ minutes }: Props) {
                 ) : (
                     <p className="mt-1.5 text-xl text-soft">All done! Nice work.</p>
                 )}
-                <Countdown key={minutes} minutes={minutes} onStart={startFocus}/>
+                <Countdown key={minutes} minutes={minutes} running={running} onToggle={toggleRunning}/>
             </div>
         )
     }
@@ -133,7 +141,7 @@ export function RecommendationPanel({ minutes }: Props) {
                     />
                 </div>
             </div>
-            <Countdown key={minutes} minutes={minutes} onStart={startFocus}/>
+            <Countdown key={minutes} minutes={minutes} running={running} onToggle={toggleRunning}/>
         </div>
     );
 }
